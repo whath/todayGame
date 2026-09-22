@@ -1,0 +1,9 @@
+{
+  "name": "todaygame",
+  "version": "0.1.0-dev",
+  "private": true,
+  "description": "DuoGame — Windows local co-op foundation",
+  "author": "whath <1024721855@qq.com>",
+  "creator": { "version": "3.8.6" },
+  "uuid": "0acd4d34-32da-4a40-b08a-c8e65e0a1c6e"
+}
