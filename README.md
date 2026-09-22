@@ -1,64 +1,66 @@
 # DuoGame / todayGame
 
-Windows PC 本地双人游戏基础工程，采用 **Cocos Creator 3.8.6 + TypeScript**。
+Windows PC 本地双人游戏基础工程，Cocos Creator **3.8.6 + TypeScript**。当前开发版本 **0.2.0-dev — Core Services & Settings Foundation**。
 
-当前版本为 `0.1.0-dev`，根据 [开发总规划](docs/reference/GAME_DEV_CODEX_MASTER_PLAN.md) 生成第一版代码。**本次按要求仅生成并提交代码，没有启动编辑器、运行游戏、类型检查、测试或构建；不代表 V0.1 验收通过，也没有发布版本 Tag。**
+按 [新版开发规划](docs/reference/GAME_DEV_CODEX_MASTER_PLAN_V0.2.md) 扩展核心服务与设置层，保留共用角色 Prefab、双人独立输入、共享镜头和碰撞测试房间。尚未完成 Creator 实机及 Windows 发布验收，不代表正式 v0.2.0 发布。
 
-## 已提供的代码
+## 本轮新增
 
-- 两个玩家共用 `assets/player/Player.prefab` 和同一套控制逻辑。
-- 两套独立键盘映射、Cocos 手柄适配器、摇杆死区和动作按下沿。
-- 键盘 + 键盘、键盘 + 手柄、手柄 + 键盘、手柄 + 手柄的设备分配流程。
-- 按键加入、两个玩家就绪后开始、断开暂停、重新按键确认设备。
-- 单一正交相机：双人中心跟随、距离缩放、平滑和视野上下限。
-- 俯视测试房间、静态矩形障碍、边界碰撞、出生点和重置。
-- 设备状态 HUD；Primary / Secondary / Interact 仅显示动作标签，不包含战斗。
+- 数据驱动设置：布尔、数值、枚举、按键绑定；全局与 P1/P2 槽位设置。
+- 工作副本、即时预览、应用、取消、恢复分类 / 全部 / 单玩家控制，含确认提示。
+- 独立设置存储、schema 迁移、非法值修复、未来版本保护、保存失败回退。
+- 平台能力过滤，隐藏没有可靠后端的全屏、分辨率、VSync、Gamma、震动与字幕选项。
+- Master / Music / SFX / UI 音频总线和 CocosAudioAdapter；失焦静音独立于暂停。
+- P1/P2 重绑定，跨玩家按键冲突的交换 / 解除 / 取消，摇杆死区配置。
+- 简体中文字符串表、UI 缩放、减少动作闪光、共享镜头跟随强度。
+- 集中暂停原因管理、开发版诊断信息，以及自动测试入口。
 
-## 后续打开工程
+## 打开工程
 
-以下步骤供之后人工操作，本次未执行：
+1. 在 Cocos Dashboard 用 Creator **3.8.6** 导入仓库根目录。
+2. 等待编辑器导入资源，打开 `assets/scenes/Prototype.scene`。
+3. 点击预览；房间、相机和 UI 由 Bootstrap 运行时创建。
+4. 使用两套键盘映射、键盘与手柄，或两只手柄按顺序加入。两人就绪后自动开始。
 
-1. 安装 Cocos Creator **3.8.6**，在 Dashboard 选择「导入项目」，选中仓库根目录。
-2. 等待编辑器首次导入资源并生成 `temp/tsconfig.cocos.json`。
-3. 打开 `assets/scenes/Prototype.scene`。入口组件已引用共用 Player Prefab。
-4. 点击预览。房间、相机和 HUD 在入口组件中生成，编辑器静态场景仅显示 Bootstrap。
-5. 按下面的映射加入 P1 和 P2。先加入的输入源成为 P1，后加入的成为 P2。
+此流程尚未在本机 Creator 中执行。`cc` 运行时由 Creator 提供，不通过 npm 启动游戏。
 
-本工程没有 npm 运行命令，也不需要安装 npm 生产依赖。`cc` 和 TypeScript 引擎声明由 Creator 提供。
-
-| 输入源 | 移动 | Primary | Secondary | Interact |
+| 默认配置 | 移动 | 主动作 | 次动作 | 交互 |
 | --- | --- | --- | --- | --- |
-| Keyboard A | W / A / S / D | F | G | E |
-| Keyboard B | 方向键 | J | K | L |
-| 手柄 | 左摇杆 / 十字键 | 下方按钮（A / Cross） | 右方按钮（B / Circle） | 左方按钮（X / Square） |
+| P1 键盘配置 | W/A/S/D | F | G | E |
+| P2 键盘配置 | 方向键 | J | K | L |
+| 手柄 | 左摇杆 / 十字键 | South（A/Cross） | East（B/Circle） | West（X/Square） |
 
-- 键盘按任一映射键加入；手柄按任一受支持按钮或十字键加入，单独移动摇杆不加入。
-- `R`：重置两个角色位置，保留设备分配。
-- `Esc`：回到加入界面，释放设备分配；松开原有按键后重新按键加入。
-- 手柄断开时暂停双方移动；连接后按按钮确认，优先恢复断开槽位。两个槽位均断开时按 P1、P2 顺序确认。
-- 启动前已连接的手柄可能需要先按按钮，Cocos 才会向工程报告设备。
-- 同一物理键盘的两套映射作为两个逻辑输入源；不识别两把 USB 键盘的硬件身份。
+加入前 Keyboard A/B 分别使用 P1/P2 默认映射；加入后配置跟随实际玩家槽位。映射发生切换时先松开全部按键再继续，避免按住旧按键误加入第二个槽位。两套逻辑映射不代表能够识别两把 USB 键盘的硬件身份。
 
-## 工程布局
+| 操作 | 按键 / 入口 |
+| --- | --- |
+| 暂停 / 继续 | Esc |
+| 打开设置 | F2；手柄 Options / Start |
+| 设置导航 | 方向键、Enter、Esc、Tab；手柄方向 / A / B / R1；鼠标点击 |
+| 重置角色位置 | F5（游戏进行中） |
+| 返回加入界面 | 设置页“返回加入界面”，确认后释放设备 |
+| 调试信息 | F1，仅开发构建 |
+| 解除某动作绑定 | 进入按键捕获后按 Backspace |
 
-```text
-assets/
-  core/       输入数据、会话状态、基础矩形碰撞
-  input/      输入设备、玩家槽位、独占分配
-  platform/   Cocos 键盘和手柄事件适配
-  player/     唯一 Player Prefab、控制器、移动、状态
-  camera/     双人共享正交相机
-  gameplay/   入口和测试房间
-  ui/         设备与操作提示
-  scenes/     Prototype.scene
-docs/         架构、输入、决策、开发记录及后续验收清单
-settings/     Creator 项目设置与入口场景
+设置页的修改先留在工作副本；应用成功才保存，取消恢复原值。原型没有正式音频素材，音频设置作用于通过 AudioService / CocosAudioAdapter 注册的声音。
+
+## 开发验证
+
+开发依赖仅包括固定版本 TypeScript 与官方 Cocos 引擎声明，不增加运行时生产依赖。使用 Node.js 22+ 和 pnpm 安装：
+
+```sh
+pnpm install --frozen-lockfile
+pnpm test
 ```
 
-## 当前边界
+可分别执行 `pnpm typecheck:core`、`pnpm typecheck:engine`、`pnpm check:syntax`。生成的测试编译文件位于已忽略的 `temp/core-tests`，不会进入游戏资源。
 
-基础碰撞只处理角色与静态矩形 / 房间边界；角色之间可以穿过，不包含推箱子、旋转碰撞体、刚体模拟或重力。矩形俯视视角用于验证基础，不预设最终玩法。无敌人、武器、网络、移动平台、正式美术或第三方生产依赖。
+当前结果：**30 项自动测试通过，全项目官方 Cocos 3.8.6 声明类型检查通过，37 个脚本语法转译通过**。这些结果不替代真实引擎运行、手柄测试、音频输出或 Windows 构建。详见 [验证记录](docs/VALIDATION_V0.2.md)。
 
-Windows 原生构建、实际手柄兼容性、资源导入与视觉效果均待人工验证。后续构建说明见 [Windows 构建](docs/WINDOWS_BUILD.md)，验收清单见 [待执行验收](docs/ACCEPTANCE.md)。
+## 模块与边界
 
-文档导航：[项目](docs/PROJECT.md) · [架构](docs/ARCHITECTURE.md) · [输入](docs/INPUT_DESIGN.md) · [决策](docs/DECISIONS.md) · [开发日志](docs/DEVLOG.md) · [路线图](docs/ROADMAP.md)
+`assets/settings` 管设置合同和事务；`assets/services` 管纯逻辑服务；`assets/platform` 管 Cocos 输入、焦点、存储、帧率、音频；`assets/app` 组装服务；原来的 core / input / player / camera / gameplay / ui / scenes 保持职责分离。
+
+无敌人、战斗、正式美术、网络、移动平台或进度存档系统。碰撞只处理角色与静态矩形及房间边界，角色之间可穿过。原生显示模式切换等能力仍待后续适配，菜单不会提供无效选项。
+
+文档：[核心服务](docs/CORE_SERVICES.md) · [设置设计](docs/SETTINGS_DESIGN.md) · [架构](docs/ARCHITECTURE.md) · [输入](docs/INPUT_DESIGN.md) · [路线图](docs/ROADMAP.md) · [验证](docs/VALIDATION_V0.2.md) · [开发日志](docs/DEVLOG.md)

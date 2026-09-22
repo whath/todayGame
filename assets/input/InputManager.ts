@@ -12,7 +12,7 @@ export class InputManager {
     }
     public register(device: InputDevice): void { this.devices.set(device.id, device); }
 
-    public update(): void {
+    public update(allowJoin = true): void {
         this.devices.forEach((device, key) => {
             device.sample();
             if (!device.connected) {
@@ -20,7 +20,7 @@ export class InputManager {
                 this.devices.delete(key);
                 return;
             }
-            if (!device.frame.joinPressed || this.slots.some(slot => slot.deviceId === device.id)) return;
+            if (!allowJoin || !device.frame.joinPressed || this.slots.some(slot => slot.deviceId === device.id)) return;
             // Recover disconnected players before assigning a brand-new player.
             const slot = this.slots.find(item => item.assigned && !item.connected)
                 ?? this.slots.find(item => !item.assigned);
@@ -28,6 +28,9 @@ export class InputManager {
         });
     }
 
+    public playerForDevice(id: string): 1 | 2 | undefined {
+        return this.slots.find(slot => slot.deviceId === id)?.playerId;
+    }
     public clearFrames(): void { this.devices.forEach(device => device.clear()); }
     public releaseAll(): void { this.slots.forEach(slot => slot.release()); }
     public dispose(): void { this.releaseAll(); this.devices.clear(); }

@@ -38,3 +38,11 @@ export function normalizeMove(x: number, y: number): MoveVector {
     const divisor = Math.max(1, length);
     return { x: x / divisor, y: y / divisor };
 }
+
+export function applyStickDeadzone(x: number, y: number, deadzone: number): MoveVector {
+    const magnitude = Math.hypot(x, y);
+    const inner = Math.max(0, Math.min(0.95, deadzone));
+    if (magnitude <= inner) return { x: 0, y: 0 };
+    const amount = Math.min(1, (magnitude - inner) / (1 - inner));
+    return { x: x / magnitude * amount, y: y / magnitude * amount };
+}

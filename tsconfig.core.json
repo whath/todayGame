@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "strict": true,
+    "rootDir": "assets",
+    "outDir": "temp/core-tests",
+    "noEmitOnError": true,
+    "skipLibCheck": true,
+    "types": []
+  },
+  "include": ["assets/core/**/*.ts", "assets/input/**/*.ts", "assets/settings/**/*.ts", "assets/services/**/*.ts"]
+}

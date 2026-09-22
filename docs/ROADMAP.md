@@ -1,26 +1,29 @@
 # 路线图
 
-“代码已生成”与“验收通过”分开记录。
+## v0.1 Local Co-op Foundation
 
-| 规划任务 | 当前代码状态 | 执行 / 验收 |
+Task 0–7 的工程、输入、共用玩家、独立移动、加入、共享镜头、热插拔和房间代码已存在。v0.1 首轮按用户要求未运行；本轮自动回归覆盖了部分输入、热插拔逻辑和碰撞，原始实机 Gate 仍未完成。
+
+## v0.2 Core Services & Settings Foundation
+
+本轮依照新版文档推进开发，版本为 0.2.0-dev，不把尚未完成的 v0.1 PASS 前置条件视为通过。
+
+| 任务 | 当前实现 | 验证边界 |
 | --- | --- | --- |
-| Task 0 工程与文档 | 已生成 | 未运行编辑器 / Scene |
-| Task 1 输入抽象 | 已生成 | NOT RUN |
-| Task 2 共用玩家 | 已生成 | NOT RUN |
-| Task 3 双人移动 | 已生成 | NOT RUN |
-| Task 4 加入与分配 | 已生成 | NOT RUN |
-| Task 5 共享镜头 | 已生成 | NOT RUN |
-| Task 6 热插拔 | 已生成 | NOT RUN |
-| Task 7 测试房间 | 已生成 | NOT RUN |
-| Task 8 Gate / Release | 尚未执行 | 不创建发布 Tag |
+| S0 Core Services Audit | CORE_SERVICES / SETTINGS_DESIGN 及职责调整 | 文档与代码同步 |
+| S1 Registry / Store | 四种定义类型、默认值、运行快照和工作副本 | 自动测试通过 |
+| S2 Persistence / Migration | 独立存储 key、schema 2、v1 迁移、校验和恢复 | 逻辑测试通过；原生存储待测 |
+| S3 Platform Capabilities | 菜单能力过滤，未实现能力隐藏 | 逻辑测试通过 |
+| S4 Audio Service | Master / Music / SFX / UI，音源注册与焦点静音 | 混音逻辑通过；实音频待测 |
+| S5 Display Foundation | 30/60 目标帧率，危险设置确认框架 | 显示确认逻辑通过；原生全屏等不开放 |
+| S6 Control Settings | 玩家槽位绑定、冲突处理、死区、恢复默认 | 逻辑与键盘事件桥接测试通过；设备待测 |
+| S7 Accessibility | UI 缩放、减少闪烁、镜头跟随强度；字幕 schema 隐藏 | 逻辑通过；视觉待测 |
+| S8 Settings Menu | 数据驱动分类、分页、应用 / 取消 / 重置 / 提示 / 确认 | 类型检查通过；引擎交互待测 |
+| S9 Localization | zh-CN 字符串 ID 和替换参数 | 定义文案覆盖测试通过 |
+| S10 Pause / Focus | 集中暂停原因，失焦暂停与静音分开 | 服务逻辑通过；原生焦点待测 |
+| S11 Diagnostics | 开发版 FPS / 输入 / 设备 / 镜头 / 设置状态 | 开关逻辑通过；实际渲染待测 |
+| S12 Gate | 30 项测试、官方类型检查、语法检查已执行 | Windows / Creator Gate 未完成，不创建 Tag |
 
-后续优先级：
+下一步优先：按 VALIDATION_V0.2.md 完成 Creator 首次导入、UI 交互、四种设备组合、原生保存、音频与 Windows 构建；修复后记录真实 Gate 结果，再考虑发布。
 
-1. Creator 3.8.6 首次导入、组件引用、类型编译和基础 Scene 运行。
-2. 四种键盘 / 手柄组合，同时移动、独占分配和重连顺序。
-3. 相机在房间角落、最大距离和不同桌面窗口中的取景。
-4. 静态碰撞、失焦暂停、重置和重复进入场景。
-5. Windows 原生构建、干净机器启动与 Console 检查。
-6. 所有 Gate 有证据通过后，才进入 v0.1.0 发布。
-
-V0.2 再选择玩法实验。Primary / Secondary / Interact 已作为逻辑动作占位，不提前绑定射击、近战、技能或推拉玩法。移动 / 小游戏平台和网络继续后置。
+之后顺序调整为：v0.3 Interaction Sandbox → v0.4 Gameplay Prototype Experiments → 决定具体类型。移动 / 小游戏平台与网络仍后置。

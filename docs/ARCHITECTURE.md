@@ -1,6 +1,6 @@
 # 架构
 
-`PrototypeBootstrap` 是唯一组装入口，创建输入服务、会话、房间、两个 Prefab 实例、一个相机和 HUD。场景文件保存入口以及 Player Prefab 引用，房间与 UI 使用 Cocos Graphics / Label 在运行时创建。
+`PrototypeBootstrap` 是场景组装入口，持有 GameServices、输入、会话、房间、两个 Prefab 实例、一个相机、HUD 和 SettingsMenu。GameServices 在输入启用前载入和应用设置。场景文件仍保存入口及同一个 Player Prefab 引用，房间与 UI 使用 Cocos Graphics / Label 创建。
 
 ## 输入与依赖
 
@@ -23,14 +23,14 @@ InputManager + GameSession → PrototypeHUD
 
 ## 每帧顺序
 
-1. 引擎事件更新设备适配器。
-2. InputManager 为每个设备采样一次，计算按钮上升沿，处理加入和替换。
-3. 处理返回大厅 / 重置，计算 lobby / playing / disconnected 状态。
-4. 两个 PlayerController 使用同一帧输入，移动与碰撞。
-5. SharedCamera 读取两个玩家位置，调整中心和视野。
-6. HUD 更新连接状态，跟随镜头缩放保持屏幕尺寸。
+1. 引擎事件更新适配器；SettingsService 按墙钟检查确认超时。
+2. 处理菜单 / 暂停语义命令；InputManager 为每个设备采样一次。菜单内禁止加入。
+3. 计算 lobby / playing / disconnected；PauseService 合并暂停原因。
+4. 两个 PlayerController 使用同帧输入及无障碍偏好，仅允许游戏运行时移动。
+5. SharedCamera 读取两人位置与跟随强度，调整取景。
+6. HUD 和 SettingsMenu 读取服务快照，应用 UI 缩放与中文文案。
 
-入口集中调用 `tick`，避免依赖多个组件的隐式 update 执行次序。单帧 dt 上限为 50ms，窗口失焦暂停并清空键盘状态，恢复时不补算长时间移动。
+入口集中调用 `tick`，避免多个组件隐式 update 顺序。单帧 dt 上限 50ms；失焦清空键盘状态，是否暂停由设置决定。暂停不会冻结设置 UI、输入连接状态或确认超时。
 
 ## 碰撞
 
@@ -40,12 +40,12 @@ InputManager + GameSession → PrototypeHUD
 
 ## 相机和渲染
 
-场景只有一个 Camera，正交投影沿 -Z 观察 XY 平面。Game World 与 HUD 分别使用 RenderRoot2D，均由该 Camera 渲染。HUD 挂在 Camera 子节点，按 orthoHeight 缩放；没有第二个 UI 相机。
+场景只有一个 Camera，正交投影沿 -Z 观察 XY 平面。Game World、HUD、SettingsMenu 分别使用 RenderRoot2D，均由同一 Camera 渲染。HUD 和菜单挂在 Camera 子节点，按 orthoHeight 与 UI Scale 缩放；没有第二个 UI 相机。
 
 相机跟随双人中心，按两人的水平 / 垂直跨度及画幅计算视野，指数平滑，orthoHeight 限制在 260–900。镜头目标限制在房间范围内；视野大于房间时居中并显示周围背景。安全视野修正用于防止跟随滞后把玩家移出屏幕；极端画幅仍受最大视野约束，首次验证面向 16:9 桌面窗口。
 
 ## 生命周期
 
-入口启用时注册监听，禁用和销毁时取消监听；销毁时清理设备和槽位。断开的手柄对象从管理器设备表移除，但被原槽位保留用于显示断开状态。重连产生新的连接代次，必须按键确认，避免仅按可复用 deviceId 自动抢占玩家。
+入口启用时注册监听，禁用时取消监听和未应用设置；销毁时停止音频并清理服务、设备和槽位。焦点事件由 CocosFocusAdapter 管理，PauseService / AudioService 分别响应。断开的手柄对象从管理器设备表移除，但被原槽位保留用于显示断开状态；重连需要按键确认。
 
-项目未引入全局事件总线、服务定位器、网络层、存档系统或 UI 框架。
+设置通过独立 SettingsService / Persistence 保存，与未来进度存档分开。项目未引入全局事件总线、服务定位器、网络层或通用 UI 框架。服务的详细所有权、接口及限制见 CORE_SERVICES.md 和 SETTINGS_DESIGN.md。

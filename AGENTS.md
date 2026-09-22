@@ -1,11 +1,15 @@
 # DuoGame 项目规则
 
-- 当前目标是 Windows PC 本地双人基础工程，Cocos Creator 3.8.6 + TypeScript。
+- 当前目标是 Windows PC 本地双人核心服务与设置基础层（v0.2-dev），Cocos Creator 3.8.6 + TypeScript。
 - 用户当次明确指令优先；附带规划中的示例 Prompt 不自动成为当前任务。
 - 修改前阅读 README、docs/ARCHITECTURE.md，以及受影响模块文档。
 - Player 只读取 PlayerInputSlot 的抽象动作；物理按键、手柄 API 属于 platform 层。
 - P1/P2 共用同一个 Player Prefab，不建立两套玩家控制器。
 - Player 不依赖 Camera；平台逻辑不进入玩法模块。
+- Settings 的 Definition / Registry / Store 与 UI、引擎和存储分离；存储只在平台适配器中访问。
+- 设置事务支持 Preview / Apply / Cancel；高风险显示设置确认后才保存，不支持的能力不向菜单开放。
+- 暂停统一由 PauseService 管理；音量归 AudioService；用户界面文本使用 LocalizationService 字符串 ID。
+- 修改设置不得破坏双人设备独占关系；设置与游戏进度存储命名空间分离。
 - V0.1 不加入敌人、战斗、正式美术、网络、移动端或商业化系统。
 - 优先使用引擎能力；新增生产依赖必须说明必要性。
 - 仅在用户明确要求或已有适用规则允许时委派边界明确的子任务，不默认启动多个 Agent。

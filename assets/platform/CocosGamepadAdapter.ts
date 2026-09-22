@@ -1,15 +1,18 @@
 import { EventGamepad, input, Input } from 'cc';
-import { EMPTY_RAW, RawInput } from '../core/InputTypes';
+import { applyStickDeadzone, EMPTY_RAW, RawInput } from '../core/InputTypes';
 import { GamepadInputDevice } from '../input/GamepadInputDevice';
+import { MenuInput } from '../core/MenuInput';
 
 type CocosPad = EventGamepad['gamepad'];
-interface Connection { source: CocosPad; live: boolean }
+interface Connection { source: CocosPad; live: boolean; id: string }
 
 /** Uses Cocos' Web / Windows native abstraction, never navigator in gameplay. */
 export class CocosGamepadAdapter {
     private readonly connections = new Map<number, Connection>();
     private generation = 0;
-    public constructor(private readonly register: (device: GamepadInputDevice) => void) {}
+    private previousMenu: MenuInput = {};
+    public constructor(private readonly register: (device: GamepadInputDevice) => void,
+        private readonly deadzone: (deviceId: string) => number = () => 0.2) {}
 
     public start(): void {
         input.on(Input.EventType.GAMEPAD_CHANGE, this.onPad, this);
@@ -20,6 +23,7 @@ export class CocosGamepadAdapter {
         input.off(Input.EventType.GAMEPAD_INPUT, this.onPad, this);
         this.connections.forEach(connection => { connection.live = false; });
         this.connections.clear();
+        this.previousMenu = {};
     }
     private onPad(event: EventGamepad): void {
         const pad = event.gamepad;
@@ -30,23 +34,41 @@ export class CocosGamepadAdapter {
             return;
         }
         if (previous) { previous.source = pad; return; }
-        const connection: Connection = { source: pad, live: true };
+        const connection: Connection = { source: pad, live: true, id: `gamepad:${pad.deviceId}:${++this.generation}` };
         this.connections.set(pad.deviceId, connection);
         this.register(new GamepadInputDevice(
-            `gamepad:${pad.deviceId}:${++this.generation}`,
+            connection.id,
             `Gamepad ${pad.deviceId + 1}`,
             () => this.read(connection),
             () => connection.live && connection.source.connected,
         ));
+    }
+    public menuInput(): MenuInput {
+        const held: MenuInput = {};
+        this.connections.forEach(({ source: pad, live }) => {
+            if (!live || !pad.connected) return;
+            const dpad = pad.dpad.getValue();
+            const stick = pad.leftStick.getValue();
+            held.up ||= dpad.y > 0.5 || stick.y > 0.5;
+            held.down ||= dpad.y < -0.5 || stick.y < -0.5;
+            held.left ||= dpad.x < -0.5 || stick.x < -0.5;
+            held.right ||= dpad.x > 0.5 || stick.x > 0.5;
+            held.accept ||= pad.buttonSouth.getValue() > 0.5;
+            held.back ||= pad.buttonEast.getValue() > 0.5;
+            held.tab ||= pad.buttonR1.getValue() > 0.5;
+            held.settings ||= pad.buttonOptions.getValue() > 0.5 || pad.buttonStart.getValue() > 0.5;
+        });
+        const edge: MenuInput = {};
+        for (const key of ['up', 'down', 'left', 'right', 'accept', 'back', 'tab', 'settings'] as const) edge[key] = held[key] && !this.previousMenu[key];
+        this.previousMenu = held;
+        return edge;
     }
     private read(connection: Connection): RawInput {
         if (!connection.live || !connection.source.connected) return EMPTY_RAW;
         const pad = connection.source;
         const stick = pad.leftStick.getValue();
         const dpad = pad.dpad.getValue();
-        const magnitude = Math.hypot(stick.x, stick.y);
-        const deadzone = 0.2;
-        const amount = magnitude > deadzone ? Math.min(1, (magnitude - deadzone) / (1 - deadzone)) : 0;
+        const move = applyStickDeadzone(stick.x, stick.y, this.deadzone(connection.id));
         const useDpad = Math.hypot(dpad.x, dpad.y) > 0.1;
         const primary = pad.buttonSouth.getValue() > 0.5;
         const secondary = pad.buttonEast.getValue() > 0.5;
@@ -56,8 +78,8 @@ export class CocosGamepadAdapter {
             pad.buttonR3, pad.buttonShare, pad.buttonOptions, pad.buttonStart]
             .some(button => button.getValue() > 0.5) || useDpad;
         return {
-            x: useDpad ? dpad.x : (magnitude > 0 ? stick.x / magnitude * amount : 0),
-            y: useDpad ? dpad.y : (magnitude > 0 ? stick.y / magnitude * amount : 0),
+            x: useDpad ? dpad.x : move.x,
+            y: useDpad ? dpad.y : move.y,
             primary, secondary, interact, join,
         };
     }

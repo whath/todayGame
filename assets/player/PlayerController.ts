@@ -4,6 +4,8 @@ import { MoveVector, PlayerId } from '../core/InputTypes';
 import { PlayerInputSlot } from '../input/PlayerInputSlot';
 import { PlayerMovement } from './PlayerMovement';
 import { PlayerState } from './PlayerState';
+import { LocalizationService } from '../services/LocalizationService';
+import { AccessibilityService } from '../services/AccessibilityService';
 const { ccclass } = _decorator;
 
 @ccclass('PlayerController')
@@ -17,8 +19,12 @@ export class PlayerController extends Component {
     private tint = new Color();
     private pulse = 0;
     private lastAction = '';
+    private locale!: LocalizationService;
+    private accessibility!: AccessibilityService;
 
-    public initialize(slot: PlayerInputSlot): void {
+    public initialize(slot: PlayerInputSlot, locale: LocalizationService, accessibility: AccessibilityService): void {
+        this.locale = locale;
+        this.accessibility = accessibility;
         this.slot = slot;
         this.playerId = slot.playerId;
         this.node.name = `Player ${this.playerId}`;
@@ -50,9 +56,9 @@ export class PlayerController extends Component {
             this.state = PlayerState.Waiting;
         } else {
             this.state = this.movement.step(this.slot.getMoveVector(), dt, world) ? PlayerState.Moving : PlayerState.Idle;
-            if (this.slot.isPrimaryPressed()) this.showAction('PRIMARY');
-            if (this.slot.isSecondaryPressed()) this.showAction('SECONDARY');
-            if (this.slot.isInteractPressed()) this.showAction('INTERACT');
+            if (this.slot.isPrimaryPressed()) this.showAction(this.locale.t('action.primary'));
+            if (this.slot.isSecondaryPressed()) this.showAction(this.locale.t('action.secondary'));
+            if (this.slot.isInteractPressed()) this.showAction(this.locale.t('action.interact'));
         }
         this.nameLabel.string = this.pulse > 0 ? `P${this.playerId} ${this.lastAction}` : `P${this.playerId}`;
         this.draw();
@@ -72,8 +78,9 @@ export class PlayerController extends Component {
         this.body.fillColor = this.state === PlayerState.Disconnected ? new Color(120, 128, 142) : this.tint;
         this.body.roundRect(-half, -half, half * 2, half * 2, 5);
         this.body.fill();
-        this.body.strokeColor = this.pulse > 0 ? Color.WHITE : new Color(24, 34, 50);
-        this.body.lineWidth = this.pulse > 0 ? 4 : 2;
+        const highlight = this.pulse > 0 && !this.accessibility.reduceFlashing;
+        this.body.strokeColor = highlight ? Color.WHITE : new Color(24, 34, 50);
+        this.body.lineWidth = highlight ? 4 : 2;
         this.body.roundRect(-half, -half, half * 2, half * 2, 5);
         this.body.stroke();
     }

@@ -6,7 +6,9 @@
 
 首批代码覆盖规划 Task 0–7：工程文档、输入抽象、玩家复用、独立移动、加入分配、共享相机、热插拔状态与测试房间。Task 8 验收 / 发布暂未执行。
 
-当前交付是未经运行验证的源码，不是 Windows 可执行文件。版本 `0.1.0-dev` 不代表 `v0.1.0` Gate 通过。
+当前版本为 `0.2.0-dev`，在首版双人底座上增加核心服务与设置层。已通过自动逻辑测试和官方引擎声明类型检查，尚不是经过 Creator 实机 / Windows 验收的可执行交付。
+
+新增范围：Settings、Persistence、Capability、Audio、Control Settings、Accessibility、Localization、Pause / Focus 和 Development Diagnostics。服务职责见 CORE_SERVICES.md；功能与验收分开记录，未创建发布 Tag。
 
 范围内：双键盘映射、键盘与手柄混合、双手柄、静态房间碰撞、连接状态、重置与返回大厅。
 

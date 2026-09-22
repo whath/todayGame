@@ -1,9 +1,21 @@
 {
   "name": "todaygame",
-  "version": "0.1.0-dev",
+  "version": "0.2.0-dev",
   "private": true,
-  "description": "DuoGame — Windows local co-op foundation",
+  "description": "DuoGame — core services and settings foundation",
+  "scripts": {
+    "test": "node tools/run-tests.cjs",
+    "typecheck:core": "tsc -p tsconfig.core.json --noEmit",
+    "typecheck:engine": "tsc -p tsconfig.engine.json",
+    "check:syntax": "node tools/check-syntax.cjs"
+  },
   "author": "whath <1024721855@qq.com>",
-  "creator": { "version": "3.8.6" },
-  "uuid": "0acd4d34-32da-4a40-b08a-c8e65e0a1c6e"
+  "creator": {
+    "version": "3.8.6"
+  },
+  "uuid": "0acd4d34-32da-4a40-b08a-c8e65e0a1c6e",
+  "devDependencies": {
+    "@cocos/creator-types": "3.8.6",
+    "typescript": "5.9.3"
+  }
 }
