@@ -1,12 +1,12 @@
 # DuoGame — Codex 游戏开发执行体系
 
-> 版本：v0.1  
-> 项目阶段：Foundation / Local Co-op Prototype  
-> 主平台：Windows PC  
-> 引擎：Cocos Creator 3.8.x  
-> 语言：TypeScript  
-> 核心模式：本地双人单机、同屏、不分屏、P1/P2 可自由选择键盘或手柄  
-> 未来方向：在核心玩法成熟后，再评估 Android / iOS / 微信小游戏 / 抖音小游戏 / Steam 等发行形态  
+> 版本：v0.1
+> 项目阶段：Foundation / Local Co-op Prototype
+> 主平台：Windows PC
+> 引擎：Cocos Creator 3.8.x
+> 语言：TypeScript
+> 核心模式：本地双人单机、同屏、不分屏、P1/P2 可自由选择键盘或手柄
+> 未来方向：在核心玩法成熟后，再评估 Android / iOS / 微信小游戏 / 抖音小游戏 / Steam 等发行形态
 > 当前原则：先做可复用的“双人游戏基础”，暂不决定最终题材、美术、战斗类型和商业化玩法
 
 ---
@@ -1841,13 +1841,13 @@ Skills
 
 参考文档：
 
-- OpenAI — AGENTS.md custom instructions  
+- OpenAI — AGENTS.md custom instructions
   https://developers.openai.com/docs/agent-configuration/agents-md
-- OpenAI — Subagents  
+- OpenAI — Subagents
   https://developers.openai.com/docs/agent-configuration/subagents
-- OpenAI — Build skills  
+- OpenAI — Build skills
   https://developers.openai.com/docs/build-skills
-- OpenAI — Customization overview  
+- OpenAI — Customization overview
   https://developers.openai.com/docs/customization/overview
 
 ---
@@ -2902,7 +2902,7 @@ setting description
 
 例如：
 
-> Reduce Screen Shake  
+> Reduce Screen Shake
 > Reduces non-essential camera movement during impacts and explosions.
 
 ---
