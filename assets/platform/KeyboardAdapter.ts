@@ -42,8 +42,9 @@ export class KeyboardAdapter {
         else for (const [name, code] of this.keyCodes) if (has(code)) { bindingKey = name; break; }
         return {
             up: has(KeyCode.ARROW_UP), down: has(KeyCode.ARROW_DOWN), left: has(KeyCode.ARROW_LEFT), right: has(KeyCode.ARROW_RIGHT),
-            accept: has(KeyCode.ENTER), back: has(KeyCode.ESCAPE), tab: has(KeyCode.TAB),
-            settings: has(KeyCode.F2), reset: has(KeyCode.F5), diagnostics: has(KeyCode.F1), bindingKey,
+            accept: has(KeyCode.ENTER), back: has(KeyCode.ESCAPE), tab: has(KeyCode.TAB) && !this.held.has(KeyCode.SHIFT_LEFT),
+            previousTab: has(KeyCode.TAB) && this.held.has(KeyCode.SHIFT_LEFT),
+            settings: has(KeyCode.F2), pause: has(KeyCode.ESCAPE), reset: has(KeyCode.F5), diagnostics: has(KeyCode.F1), bindingKey,
         };
     }
     public endFrame(): void { this.pressed.clear(); }

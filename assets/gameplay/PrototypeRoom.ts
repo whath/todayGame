@@ -1,18 +1,18 @@
 import { Color, Graphics, Layers, Node, UITransform } from 'cc';
 import { Box, CollisionWorld } from '../core/CollisionWorld';
 import { MoveVector } from '../core/InputTypes';
+import { LevelDefinition } from '../content/ContentRegistry';
+import { PROTOTYPE_LEVEL } from '../content/PrototypeContent';
 
 export class PrototypeRoom {
-    public readonly bounds: Box = { x: -800, y: -450, width: 1600, height: 900 };
-    public readonly spawns: readonly MoveVector[] = [{ x: -230, y: -170 }, { x: 230, y: -170 }];
-    public readonly obstacles: readonly Box[] = [
-        { x: -120, y: -60, width: 240, height: 120 },
-        { x: -520, y: 120, width: 100, height: 180 },
-        { x: 420, y: 120, width: 100, height: 180 },
-        { x: -440, y: -330, width: 170, height: 65 },
-        { x: 270, y: -330, width: 170, height: 65 },
-    ];
-    public readonly collision = new CollisionWorld(this.bounds, this.obstacles);
+    public readonly bounds: Box;
+    public readonly spawns: readonly MoveVector[];
+    public readonly obstacles: readonly Box[];
+    public readonly collision: CollisionWorld;
+    public constructor(definition: LevelDefinition = PROTOTYPE_LEVEL) {
+        this.bounds = definition.bounds; this.spawns = definition.spawns; this.obstacles = definition.obstacles;
+        this.collision = new CollisionWorld(this.bounds, this.obstacles);
+    }
 
     public build(parent: Node): void {
         const node = new Node('Floor, boundary and obstacles');

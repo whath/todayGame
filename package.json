@@ -1,13 +1,14 @@
 {
   "name": "todaygame",
-  "version": "0.2.0-dev",
+  "version": "0.3.0-dev",
   "private": true,
-  "description": "DuoGame — core services and settings foundation",
+  "description": "DuoGame — runtime and content foundation",
   "scripts": {
     "test": "node tools/run-tests.cjs",
     "typecheck:core": "tsc -p tsconfig.core.json --noEmit",
     "typecheck:engine": "tsc -p tsconfig.engine.json",
-    "check:syntax": "node tools/check-syntax.cjs"
+    "check:syntax": "node tools/check-syntax.cjs",
+    "prepare:build": "node tools/prepare-build.cjs"
   },
   "author": "whath <1024721855@qq.com>",
   "creator": {

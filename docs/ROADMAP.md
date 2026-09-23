@@ -27,3 +27,21 @@ Task 0–7 的工程、输入、共用玩家、独立移动、加入、共享镜
 下一步优先：按 VALIDATION_V0.2.md 完成 Creator 首次导入、UI 交互、四种设备组合、原生保存、音频与 Windows 构建；修复后记录真实 Gate 结果，再考虑发布。
 
 之后顺序调整为：v0.3 Interaction Sandbox → v0.4 Gameplay Prototype Experiments → 决定具体类型。移动 / 小游戏平台与网络仍后置。
+
+## v0.3 Runtime & Content Foundation — 当前 0.3.0-dev
+
+| 任务 | 实现 | 验证状态 |
+| --- | --- | --- |
+| R0 Audit | RUNTIME_DESIGN / ARCHITECTURE | 已记录 |
+| R1–R2 SceneFlow / Loading | 应用状态、切换锁、prepare / activate / dispose、进度与失败恢复 | 逻辑自动测试；实际 UI 待验收 |
+| R3 Save / Profile | DTO、校验、迁移、备份与恢复、独立命名空间 | 逻辑自动测试；原生存储待验收 |
+| R4–R5 Content / Asset | 角色关卡稳定 ID、内容校验、共享资产作用域 | 逻辑自动测试；Cocos 引用生命周期待验收 |
+| R6 Navigation | 主菜单 / 加入 / 设置 / 暂停、模态优先级、Glyph | 导航合同自动测试；真实手柄待验收 |
+| R7 Time / Random | 暂停时间域、时间倍率、seed / state / shuffle | 自动测试 |
+| R8 Feedback | UI 脉冲、表现分离、Camera / Rumble hook | 合同自动测试；真实能力未开放 |
+| R9 Variants / Flags | 三变体、Release 禁用实验和命令、场景白名单 | 自动测试 |
+| R10 Labs | 四个实际 Lab 场景、独立实验存档 | 配置自动检查；场景实机待验收 |
+| R11 Logging / Build ID | 分类日志、上限、版本与提交标记 | 自动测试 |
+| R12 Gate | 自动回归完成 | Windows Build / 实机 NOT RUN，无发布 Tag |
+
+之后依 v3 路线推进 v0.4 Interaction Sandbox → v0.5 Gameplay Experiments → Game Direction Lock。先补原生 / 控制器 Gate，再确定具体互动实验；不默认进入战斗或联网系统。

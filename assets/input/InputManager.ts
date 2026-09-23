@@ -1,7 +1,9 @@
 import { InputDevice } from './InputDevice';
 import { PlayerInputSlot } from './PlayerInputSlot';
+import { DomainEvent } from '../runtime/DomainEvent';
 
 export class InputManager {
+    public readonly joined = new DomainEvent<{ playerId: 1 | 2; deviceId: string }>();
     public readonly slots: readonly PlayerInputSlot[] = [new PlayerInputSlot(1), new PlayerInputSlot(2)];
     private readonly devices = new Map<string, InputDevice>();
     public get bothReady(): boolean { return this.slots.every(slot => slot.connected); }
@@ -20,11 +22,17 @@ export class InputManager {
                 this.devices.delete(key);
                 return;
             }
-            if (!allowJoin || !device.frame.joinPressed || this.slots.some(slot => slot.deviceId === device.id)) return;
+        });
+        if (allowJoin) this.assignFromCurrentFrame();
+    }
+
+    public assignFromCurrentFrame(): void {
+        this.devices.forEach(device => {
+            if (!device.connected || !device.frame.joinPressed || this.slots.some(slot => slot.deviceId === device.id)) return;
             // Recover disconnected players before assigning a brand-new player.
             const slot = this.slots.find(item => item.assigned && !item.connected)
                 ?? this.slots.find(item => !item.assigned);
-            slot?.bind(device);
+            if (slot) { slot.bind(device); this.joined.publish({ playerId: slot.playerId, deviceId: device.id }); }
         });
     }
 
@@ -33,5 +41,5 @@ export class InputManager {
     }
     public clearFrames(): void { this.devices.forEach(device => device.clear()); }
     public releaseAll(): void { this.slots.forEach(slot => slot.release()); }
-    public dispose(): void { this.releaseAll(); this.devices.clear(); }
+    public dispose(): void { this.releaseAll(); this.devices.clear(); this.joined.clear(); }
 }

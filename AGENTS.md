@@ -1,6 +1,6 @@
 # DuoGame 项目规则
 
-- 当前目标是 Windows PC 本地双人核心服务与设置基础层（v0.2-dev），Cocos Creator 3.8.6 + TypeScript。
+- 当前目标是 Windows PC 本地双人运行时与内容基础层（v0.3-dev），Cocos Creator 3.8.6 + TypeScript。
 - 用户当次明确指令优先；附带规划中的示例 Prompt 不自动成为当前任务。
 - 修改前阅读 README、docs/ARCHITECTURE.md，以及受影响模块文档。
 - Player 只读取 PlayerInputSlot 的抽象动作；物理按键、手柄 API 属于 platform 层。

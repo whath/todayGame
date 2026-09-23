@@ -70,6 +70,7 @@ export class SettingsMenu {
         }
         if (input.back || input.settings) { this.requestClose(); return; }
         if (input.tab) { this.categoryIndex = (this.categoryIndex + 1) % this.categories().length; this.selected = 0; }
+        if (input.previousTab) { this.categoryIndex = (this.categoryIndex + this.categories().length - 1) % this.categories().length; this.selected = 0; }
         const definitions = this.definitions();
         const count = definitions.length + this.commands().length;
         if (input.up) this.selected = (this.selected + count - 1) % count;

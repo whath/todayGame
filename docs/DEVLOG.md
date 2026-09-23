@@ -58,3 +58,11 @@
 ### Next
 
 另行授权后首次打开 Creator，处理导入 / 编译问题，再按 ACCEPTANCE.md 执行四种输入组合及 Windows 原生构建验收。
+
+## 2026-09-23 — v0.3 Runtime & Content Foundation
+
+根据用户提供的 v3 规划完成 R0–R11 基础实现，版本提升为 0.3.0-dev。新增应用状态 / SceneFlow / Loading、存档 Profile / Slot / Session、schema 迁移 / 校验 / 恢复、角色与关卡内容注册、资源作用域、分层导航、Time / Random、表现分离与反馈接口、构建变体 / flags / 日志 / Build ID、四个 Lab 场景；同步架构、设计、构建、实验与验证文档。
+
+集成时处理：设置 modal 不被后添加的暂停 overlay 抢焦点；输入采样与 Join 分配分离，保持每帧只采样一次；旧视图清理异常不能回滚已激活的新视图；实验存档与正式存档隔离；迁移后保存保留旧 schema 原文备份；保存失败暂停显示错误，保留当前游戏现场。
+
+验证：57 项自动测试通过，官方 Cocos 3.8.6 类型检查及纯逻辑编译通过，59 个脚本语法转译通过。详细记录见 VALIDATION_V0.3。没有运行 Creator、真实手柄、Windows 构建或录制试玩素材；R12 实机 Gate 为 NOT RUN，没有发布 Tag。下一步是完成这些 Gate，再推进 v0.4 Interaction Sandbox。

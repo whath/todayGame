@@ -33,3 +33,9 @@ GameServices.boot：视图初始化 → 读取设置 → schema 迁移 → 校�
 入口禁用时取消监听并取消未应用设置；销毁时停止音源、移除服务订阅、清理输入。音源完成播放或调用 stop 后移除混音注册并销毁节点。
 
 引擎声明校验采用官方 `@cocos/creator-types@3.8.6`；该包不包含 Creator 自动生成的 `cc/env`，无头校验仅补充 `DEBUG: boolean` 声明，不替代引擎 API 类型。
+
+## v0.3 ownership 补充
+
+此文前面的 S0 为 v0.2 历史审视；当前架构以 ARCHITECTURE / RUNTIME_DESIGN 为准。新增 SceneFlowService、AssetService、TimeService、RandomService、UINavigationService、InputGlyphService、FeedbackService、GameLogger、BuildInfo / FeatureFlagService 和 SaveService，均由场景明确持有并清理。
+
+SaveService 使用平台 SaveStorage，正式与实验命名空间分开；Profile 是本地数据而非账号。ContentRegistry 在启动时验证定义，再由 SceneFlow 创建世界。暂停仍归 PauseService，音量仍归 AudioService，设置事务规则不变。GameSession 不再决定是否展示游戏页面，只负责玩家连接状态。

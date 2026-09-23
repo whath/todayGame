@@ -10,5 +10,13 @@
     "skipLibCheck": true,
     "types": []
   },
-  "include": ["assets/core/**/*.ts", "assets/input/**/*.ts", "assets/settings/**/*.ts", "assets/services/**/*.ts"]
+  "include": [
+    "assets/core/**/*.ts",
+    "assets/input/**/*.ts",
+    "assets/settings/**/*.ts",
+    "assets/services/**/*.ts",
+    "assets/runtime/**/*.ts",
+    "assets/content/**/*.ts",
+    "assets/save/**/*.ts"
+  ]
 }

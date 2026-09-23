@@ -56,10 +56,12 @@ export class CocosGamepadAdapter {
             held.accept ||= pad.buttonSouth.getValue() > 0.5;
             held.back ||= pad.buttonEast.getValue() > 0.5;
             held.tab ||= pad.buttonR1.getValue() > 0.5;
+            held.previousTab ||= pad.buttonL1.getValue() > 0.5;
             held.settings ||= pad.buttonOptions.getValue() > 0.5 || pad.buttonStart.getValue() > 0.5;
         });
         const edge: MenuInput = {};
-        for (const key of ['up', 'down', 'left', 'right', 'accept', 'back', 'tab', 'settings'] as const) edge[key] = held[key] && !this.previousMenu[key];
+        for (const key of ['up', 'down', 'left', 'right', 'accept', 'back', 'tab', 'previousTab', 'settings'] as const) edge[key] = held[key] && !this.previousMenu[key];
+        edge.pause = edge.settings;
         this.previousMenu = held;
         return edge;
     }

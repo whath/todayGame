@@ -1,66 +1,54 @@
 # DuoGame / todayGame
 
-Windows PC 本地双人游戏基础工程，Cocos Creator **3.8.6 + TypeScript**。当前开发版本 **0.2.0-dev — Core Services & Settings Foundation**。
+Windows PC 本地双人基础工程，Cocos Creator **3.8.6 + TypeScript**。当前为 **0.3.0-dev — Runtime & Content Foundation**，按 [v3 规划](docs/reference/GAME_DEV_CODEX_MASTER_PLAN_V0.3.md) 的 R0–R11 实现基础代码。R12 的 Windows 构建和实机 Gate 尚未通过，因此没有发布 Tag。
 
-按 [新版开发规划](docs/reference/GAME_DEV_CODEX_MASTER_PLAN_V0.2.md) 扩展核心服务与设置层，保留共用角色 Prefab、双人独立输入、共享镜头和碰撞测试房间。尚未完成 Creator 实机及 Windows 发布验收，不代表正式 v0.2.0 发布。
+## 本轮变化
 
-## 本轮新增
+- 主菜单 → 双人加入 → 游戏 → 暂停 / 设置 / 返回；逻辑场景切换锁、加载进度、预加载及失败恢复。
+- Profile / Slot / Session 数据快照、schema 校验与迁移、临时写入回读、上一版本备份和恢复；与设置独立存储。
+- 稳定角色 / 关卡 ID、内容注册与校验；作用域管理 Prefab 引用。
+- UI 分层导航、模态窗口独占输入、键盘及通用手柄提示。
+- 游戏 / UI / 未缩放时间、可复现随机序列与存档随机状态；PlayerPresentation 分离。
+- UI 确认反馈、镜头和震动接口、开发命令、Feature Flags、分类日志及 Build ID。
+- Development / Playtest / Release 构建配置；InputLab、CameraLab、SettingsLab、SaveLab 实际场景。
 
-- 数据驱动设置：布尔、数值、枚举、按键绑定；全局与 P1/P2 槽位设置。
-- 工作副本、即时预览、应用、取消、恢复分类 / 全部 / 单玩家控制，含确认提示。
-- 独立设置存储、schema 迁移、非法值修复、未来版本保护、保存失败回退。
-- 平台能力过滤，隐藏没有可靠后端的全屏、分辨率、VSync、Gamma、震动与字幕选项。
-- Master / Music / SFX / UI 音频总线和 CocosAudioAdapter；失焦静音独立于暂停。
-- P1/P2 重绑定，跨玩家按键冲突的交换 / 解除 / 取消，摇杆死区配置。
-- 简体中文字符串表、UI 缩放、减少动作闪光、共享镜头跟随强度。
-- 集中暂停原因管理、开发版诊断信息，以及自动测试入口。
+## 打开与操作
 
-## 打开工程
+1. 用 Creator **3.8.6** 导入仓库，打开 `assets/scenes/Prototype.scene` 并预览。
+2. 选择“新游戏”或“继续”，按两套键盘映射或手柄按钮加入；两人就绪后选择“开始”。
+3. 游戏中打开暂停菜单，可保存、重开、设置或返回主菜单。返回菜单 / 加入界面前保存失败时会留在当前游戏。
+4. 继续游戏先重新分配设备，再恢复两人位置、经过时间和随机状态。
 
-1. 在 Cocos Dashboard 用 Creator **3.8.6** 导入仓库根目录。
-2. 等待编辑器导入资源，打开 `assets/scenes/Prototype.scene`。
-3. 点击预览；房间、相机和 UI 由 Bootstrap 运行时创建。
-4. 使用两套键盘映射、键盘与手柄，或两只手柄按顺序加入。两人就绪后自动开始。
+以上是待实机验收的操作流程。本机未运行 Creator，不能将类型检查等同于可试玩验收。
 
-此流程尚未在本机 Creator 中执行。`cc` 运行时由 Creator 提供，不通过 npm 启动游戏。
+| 操作 | 键盘 | 手柄 |
+| --- | --- | --- |
+| 导航 / 确认 / 返回 | 方向键 / Enter / Esc | 十字键或左摇杆 / South / East |
+| 暂停 | Esc | Options / Start |
+| 设置 | F2 或菜单选项 | 菜单选项；主菜单 / 加入页可按 Options / Start |
+| 设置分类 | Tab / Shift+Tab | R1 / L1 |
+| 重置位置 | F5 | 暂停菜单重新开始 |
+| 调试信息 | F1，仅 Development | 开发工具菜单 |
 
-| 默认配置 | 移动 | 主动作 | 次动作 | 交互 |
+| 默认键盘配置 | 移动 | 主动作 | 次动作 | 交互 |
 | --- | --- | --- | --- | --- |
-| P1 键盘配置 | W/A/S/D | F | G | E |
-| P2 键盘配置 | 方向键 | J | K | L |
-| 手柄 | 左摇杆 / 十字键 | South（A/Cross） | East（B/Circle） | West（X/Square） |
+| P1 | W/A/S/D | F | G | E |
+| P2 | 方向键 | J | K | L |
 
-加入前 Keyboard A/B 分别使用 P1/P2 默认映射；加入后配置跟随实际玩家槽位。映射发生切换时先松开全部按键再继续，避免按住旧按键误加入第二个槽位。两套逻辑映射不代表能够识别两把 USB 键盘的硬件身份。
+手柄移动用左摇杆 / 十字键，动作使用 South / East / West。Keyboard A/B 加入前用各自默认配置，加入后跟随实际 P1/P2 槽位；映射切换需松开按键。两套逻辑映射不能识别两把 USB 键盘的硬件身份。
 
-| 操作 | 按键 / 入口 |
-| --- | --- |
-| 暂停 / 继续 | Esc |
-| 打开设置 | F2；手柄 Options / Start |
-| 设置导航 | 方向键、Enter、Esc、Tab；手柄方向 / A / B / R1；鼠标点击 |
-| 重置角色位置 | F5（游戏进行中） |
-| 返回加入界面 | 设置页“返回加入界面”，确认后释放设备 |
-| 调试信息 | F1，仅开发构建 |
-| 解除某动作绑定 | 进入按键捕获后按 Backspace |
+设置维持 Preview / Apply / Cancel；不支持的显示和震动能力不开放。原型仍无正式音频 / 美术、敌人、战斗和联网功能。
 
-设置页的修改先留在工作副本；应用成功才保存，取消恢复原值。原型没有正式音频素材，音频设置作用于通过 AudioService / CocosAudioAdapter 注册的声音。
-
-## 开发验证
-
-开发依赖仅包括固定版本 TypeScript 与官方 Cocos 引擎声明，不增加运行时生产依赖。使用 Node.js 22+ 和 pnpm 安装：
+## 验证与构建
 
 ```sh
 pnpm install --frozen-lockfile
 pnpm test
+node tools/prepare-build.cjs development
 ```
 
-可分别执行 `pnpm typecheck:core`、`pnpm typecheck:engine`、`pnpm check:syntax`。生成的测试编译文件位于已忽略的 `temp/core-tests`，不会进入游戏资源。
+开发依赖只有 TypeScript 5.9.3 和官方 Cocos 3.8.6 声明。构建准备命令只生成配置和 BuildInfo，不运行 Creator。切回编辑器前重新准备 development；Windows 构建见 [构建变体](docs/BUILD_VARIANTS.md)。
 
-当前结果：**30 项自动测试通过，全项目官方 Cocos 3.8.6 声明类型检查通过，37 个脚本语法转译通过**。这些结果不替代真实引擎运行、手柄测试、音频输出或 Windows 构建。详见 [验证记录](docs/VALIDATION_V0.2.md)。
+当前自动结果和待验收项见 [v0.3 验证记录](docs/VALIDATION_V0.3.md)。本轮没有增加生产依赖。
 
-## 模块与边界
-
-`assets/settings` 管设置合同和事务；`assets/services` 管纯逻辑服务；`assets/platform` 管 Cocos 输入、焦点、存储、帧率、音频；`assets/app` 组装服务；原来的 core / input / player / camera / gameplay / ui / scenes 保持职责分离。
-
-无敌人、战斗、正式美术、网络、移动平台或进度存档系统。碰撞只处理角色与静态矩形及房间边界，角色之间可穿过。原生显示模式切换等能力仍待后续适配，菜单不会提供无效选项。
-
-文档：[核心服务](docs/CORE_SERVICES.md) · [设置设计](docs/SETTINGS_DESIGN.md) · [架构](docs/ARCHITECTURE.md) · [输入](docs/INPUT_DESIGN.md) · [路线图](docs/ROADMAP.md) · [验证](docs/VALIDATION_V0.2.md) · [开发日志](docs/DEVLOG.md)
+文档：[架构](docs/ARCHITECTURE.md) · [运行时](docs/RUNTIME_DESIGN.md) · [存档](docs/SAVE_DESIGN.md) · [内容与资源](docs/CONTENT_DESIGN.md) · [设置](docs/SETTINGS_DESIGN.md) · [实验场景](docs/TEST_LABS.md) · [路线图](docs/ROADMAP.md) · [日志](docs/DEVLOG.md)

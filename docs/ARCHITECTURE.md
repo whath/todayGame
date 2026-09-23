@@ -1,51 +1,45 @@
 # 架构
 
-`PrototypeBootstrap` 是场景组装入口，持有 GameServices、输入、会话、房间、两个 Prefab 实例、一个相机、HUD 和 SettingsMenu。GameServices 在输入启用前载入和应用设置。场景文件仍保存入口及同一个 Player Prefab 引用，房间与 UI 使用 Cocos Graphics / Label 创建。
+`PrototypeBootstrap` 是 Cocos 组装入口，持有 GameServices、输入、SceneFlow、一个 Camera、HUD、RuntimeScreen 和 SettingsMenu。一个真实 Player Prefab 实例化两次；没有按玩家复制控制器。
 
-## 输入与依赖
+## 模块与依赖
 
 ```text
-KeyboardAdapter / CocosGamepadAdapter
-                ↓ RawInput
-          InputDevice.sample()
-                ↓ InputFrame
-            InputManager
-                ↓ 独占分配
-          PlayerInputSlot
-                ↓ 抽象动作
- PlayerController → PlayerMovement → CollisionWorld
-
+platform → Cocos 输入、存储、音频、焦点、Prefab 引用
+input → InputDevice → PlayerInputSlot → PlayerController → PlayerMovement
+                                               └→ PlayerPresentation
+content → Character / Level 定义 → PrototypeRoom / Player 初始化
+runtime → SceneFlow / AssetScope / Navigation / Time / Random / Logger
+save → Profile + Session DTO → Serializer → SaveService → Storage 接口
+settings → Definition / Registry / Store / 事务 → 平台存储适配器
 Player nodes → SharedCamera
-InputManager + GameSession → PrototypeHUD
 ```
 
-`core/InputTypes` 是不依赖引擎的合同；`input` 不引用 `cc`。`platform` 承担物理设备与引擎事件，Player 只读取槽位。GameSession 使用输入管理器判断是否两人就绪。
+core、input、services、settings、runtime、content、save 不依赖 `cc`。app / gameplay 负责引擎组装。Player 只读取槽位抽象动作，不读取物理按键、手柄 API 或 Camera；表现组件接收语义动作。Content 定义替代房间和角色的硬编码数值。
 
-## 每帧顺序
+## 状态与场景
 
-1. 引擎事件更新适配器；SettingsService 按墙钟检查确认超时。
-2. 处理菜单 / 暂停语义命令；InputManager 为每个设备采样一次。菜单内禁止加入。
-3. 计算 lobby / playing / disconnected；PauseService 合并暂停原因。
-4. 两个 PlayerController 使用同帧输入及无障碍偏好，仅允许游戏运行时移动。
-5. SharedCamera 读取两人位置与跟随强度，调整取景。
-6. HUD 和 SettingsMenu 读取服务快照，应用 UI 缩放与中文文案。
+AppState 是 boot / mainMenu / localJoin / loading / gameplay。暂停原因仍统一归 PauseService。GameSession 只描述 lobby / playing / disconnected 的双人设备状态，不承担应用场景切换。
 
-入口集中调用 `tick`，避免多个组件隐式 update 顺序。单帧 dt 上限 50ms；失焦清空键盘状态，是否暂停由设置决定。暂停不会冻结设置 UI、输入连接状态或确认超时。
+当前全部正式页面位于 Prototype.scene 容器内。SceneFlowAdapter.prepare 创建未激活世界，AssetScope 预持有 Prefab，报告进度，返回 activate / dispose。成功后换入新视图，销毁旧实例并释放旧作用域；失败保留旧视图。Loading 期间拒绝第二次请求。尚无跨 `.scene` 文件的异步关卡加载需求，不引入另一套 director 全局单例。
 
-## 碰撞
+Lab.scene 复用入口，仅序列化不同 lab 标识和独立 UUID。Release / Playtest 构建配置只列 Prototype；运行时另有 Lab 禁用保护。
 
-第一版是 kinematic AABB：角色采用正方形，障碍为静态轴对齐矩形，分别沿 X、Y 扫掠截断位移，使角色能够贴墙滑动。边界、障碍视觉与碰撞数据都来自 PrototypeRoom。
+## 帧与生命周期
 
-此实现只服务于当前静态房间，没有刚体、物理事件、推力、重力或旋转。出生点必须在无障碍区域内，不提供把已重叠物体推出障碍的求解器。角色之间不碰撞。后续需要动态物理时优先替换为 Cocos Physics2D，而不是持续扩展自制物理系统。
+1. 设置危险确认按墙钟超时；读取键盘 / 手柄菜单语义。
+2. UINavigation 将整帧交给最高层：modal > overlay > screen；toast / debug 不占焦点。
+3. InputManager 每设备采样一次；加入页分配设备，游戏中允许断线槽位接管，设置和手动暂停时不分配。
+4. GameSession 与 PauseService 更新；TimeService 计算 game / UI / unscaled delta。
+5. Player 移动、表现、共享相机使用游戏时间；UI 使用 UI 时间。
+6. HUD、RuntimeScreen、SettingsMenu 呈现快照。
 
-## 相机和渲染
+禁用入口时移除平台监听、取消未应用设置；销毁时释放场景作用域、订阅、音源与输入。存档只在明确的保存或退出操作触发，不每帧写盘；直接关闭进程没有隐式保存保证。
 
-场景只有一个 Camera，正交投影沿 -Z 观察 XY 平面。Game World、HUD、SettingsMenu 分别使用 RenderRoot2D，均由同一 Camera 渲染。HUD 和菜单挂在 Camera 子节点，按 orthoHeight 与 UI Scale 缩放；没有第二个 UI 相机。
+## 碰撞与相机
 
-相机跟随双人中心，按两人的水平 / 垂直跨度及画幅计算视野，指数平滑，orthoHeight 限制在 260–900。镜头目标限制在房间范围内；视野大于房间时居中并显示周围背景。安全视野修正用于防止跟随滞后把玩家移出屏幕；极端画幅仍受最大视野约束，首次验证面向 16:9 桌面窗口。
+保留静态 AABB 分轴扫掠、贴墙滑动、角色互相穿过。房间边界 / 障碍 / 出生点统一来自 LevelDefinition；未实现重力、旋转、推力、动态刚体。需要动态物理时优先接 Cocos Physics2D。
 
-## 生命周期
+只有一个正交 Camera，沿 -Z 观察 XY；世界、HUD、菜单用 RenderRoot2D，菜单挂 Camera 子节点。SharedCamera 读取两人位置并平滑取景，视野限 260–900。首次实机验收面向 16:9，极端画幅和真实 UI 焦点仍待测试。
 
-入口启用时注册监听，禁用时取消监听和未应用设置；销毁时停止音频并清理服务、设备和槽位。焦点事件由 CocosFocusAdapter 管理，PauseService / AudioService 分别响应。断开的手柄对象从管理器设备表移除，但被原槽位保留用于显示断开状态；重连需要按键确认。
-
-设置通过独立 SettingsService / Persistence 保存，与未来进度存档分开。项目未引入全局事件总线、服务定位器、网络层或通用 UI 框架。服务的详细所有权、接口及限制见 CORE_SERVICES.md 和 SETTINGS_DESIGN.md。
+进度存档、实验存档与设置使用独立命名空间。没有通用服务定位器、全局事件总线、对象池、网络、Ability / Mod / Replay 系统。
