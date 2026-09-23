@@ -7,3 +7,6 @@ Registry 克隆并冻结定义，拒绝重复 ID。启动校验缺失依赖 / �
 AssetService 合并并行加载，每个 AssetScope 最多持有同一 ID 一次；多个作用域共享同一资源，最后一个持有者退出才释放。加载失败可以重试；等待中销毁作用域会拒绝该消费者，迟到资源仍释放。场景切换负责旧世界实例退场，之后释放其资产作用域。
 
 CocosAssetBackend 对场景序列化引用的 Prefab 使用 addRef / decRef 管理额外持有量，不释放场景本身拥有的基础引用。当前资源量很小，不拆 Bundle，不使用 resources 全目录，也不实现通用对象池。未来异步资源后端可实现同一个 load / release 合同。
+
+
+新增 `level.coop.relay_01`，LevelDefinition 可选 coop 定义踏板、动态门、终端半径和双人出口。Registry 检查区域边界、交互半径、终端可通行与出生点不占门。静态墙体保持在 obstacles，门由 CoopChallenge 按状态加入碰撞；新增同规则布局只需注册关卡数据。

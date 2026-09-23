@@ -43,3 +43,8 @@ Lab.scene 复用入口，仅序列化不同 lab 标识和独立 UUID。Release /
 只有一个正交 Camera，沿 -Z 观察 XY；世界、HUD、菜单用 RenderRoot2D，菜单挂 Camera 子节点。SharedCamera 读取两人位置并平滑取景，视野限 260–900。首次实机验收面向 16:9，极端画幅和真实 UI 焦点仍待测试。
 
 进度存档、实验存档与设置使用独立命名空间。没有通用服务定位器、全局事件总线、对象池、网络、Ability / Mod / Replay 系统。
+
+
+## v0.4 首个互动实验
+
+CoopLevel 数据接入 ContentRegistry；CoopChallenge 位于 core，读取玩家位置和槽位 interact 语义，计算踏板、门、终端与出口。Bootstrap 在移动前更新门碰撞、移动后解析机关；CoopPresentation 和 HUD 显示状态。完成或暂停时不推进游戏逻辑。保存 schema 3 加入 Session.coop，旧测试房间和共用 Player Prefab 保持。详见 COOP_CHALLENGE。

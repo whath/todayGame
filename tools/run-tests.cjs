@@ -3,7 +3,7 @@ const commands = [
     [require.resolve('typescript/bin/tsc'), '-p', 'tsconfig.engine.json'],
     [require.resolve('typescript/bin/tsc'), '-p', 'tsconfig.core.json'],
     ['tools/check-syntax.cjs'],
-    ['--test', 'tests/foundation.test.cjs', 'tests/runtime.test.cjs'],
+    ['--test', 'tests/foundation.test.cjs', 'tests/runtime.test.cjs', 'tests/coop.test.cjs'],
 ];
 for (const args of commands) {
     const result = spawnSync(process.execPath, args, { stdio: 'inherit' });

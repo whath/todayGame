@@ -25,7 +25,7 @@ export class PrototypeHUD {
         this.help = this.label('Controls', 14);
         this.debug = this.label('Development diagnostics', 16);
     }
-    public update(manager: InputManager, session: GameSession): void {
+    public update(manager: InputManager, session: GameSession, challenge?: { title: string; help: string }): void {
         const services = this.services;
         const t = services.localization.t.bind(services.localization);
         const scale = services.accessibility.uiScale;
@@ -49,7 +49,7 @@ export class PrototypeHUD {
             [this.header, this.status, this.help].forEach(label => label.getComponent(UITransform)!.setContentSize(width - 44, 84));
             this.debug.getComponent(UITransform)!.setContentSize(width - 44, 170);
         }
-        this.header.string = t('hud.title');
+        this.header.string = challenge?.title ?? t('hud.title');
         const phase = services.pause.paused ? t('hud.paused', { reasons: services.pause.reasons.map(reason => t(`pause.${reason}`)).join(' / ') })
             : t(`hud.${session.phase}`);
         this.status.string = phase + '\n' + manager.slots.map(slot => {
@@ -63,7 +63,7 @@ export class PrototypeHUD {
             for (const action of CONTROL_ACTIONS) params[action] = services.localization.keyName(services.settings.runtime[`controls.p${player}.${action}`] as string | null);
             return t('hud.binding', params);
         });
-        this.help.string = bindings.join('\n') + '\n' + t('hud.help') + (services.diagnostics.enabled ? `   ${t('hud.debugHint')}` : '');
+        this.help.string = (challenge?.help ?? bindings.join('\n')) + '\n' + t('hud.help') + (services.diagnostics.enabled ? `   ${t('hud.debugHint')}` : '');
         this.debug.node.active = services.diagnostics.enabled && services.diagnostics.visible;
         if (this.debug.node.active) {
             const p = this.camera.node.worldPosition;

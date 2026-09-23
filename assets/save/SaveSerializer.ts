@@ -1,5 +1,6 @@
 import { ContentRegistry, isWalkable } from '../content/ContentRegistry';
 import { SAVE_SCHEMA_VERSION, saveKey, SaveSnapshot } from './SaveSnapshot';
+import { inside } from '../core/CoopChallenge';
 
 export class FutureSaveError extends Error {}
 function object(value: unknown): value is Record<string, unknown> { return typeof value === 'object' && value !== null && !Array.isArray(value); }
@@ -18,10 +19,15 @@ export class SaveSerializer {
             if (object(parsed.session)) parsed.session.randomState = parsed.session.seed;
             parsed.schemaVersion = 2;
         }
+        if (parsed.schemaVersion === 2) {
+            // v2 predates cooperative levels; preserve its original room and positions.
+            if (object(parsed.session) && parsed.session.coop !== undefined) throw new Error('Unexpected v2 cooperative state');
+            parsed.schemaVersion = 3;
+        }
         return this.validate(parsed);
     }
     public validate(value: unknown): SaveSnapshot {
-        if (!object(value) || value.schemaVersion !== 2 || typeof value.profileId !== 'string' || typeof value.slotId !== 'string' || !integer(value.savedAt)) throw new Error('Invalid save header');
+        if (!object(value) || value.schemaVersion !== SAVE_SCHEMA_VERSION || typeof value.profileId !== 'string' || typeof value.slotId !== 'string' || !integer(value.savedAt)) throw new Error('Invalid save header');
         saveKey(value.profileId, value.slotId);
         const profile = value.profile;
         if (!object(profile) || !integer(profile.sessionsStarted)) throw new Error('Invalid profile');
@@ -45,9 +51,14 @@ export class SaveSerializer {
                 seen.add(p.playerId); return { playerId: p.playerId, x: p.x, y: p.y } as { playerId: 1 | 2; x: number; y: number };
             }).sort((a, b) => a.playerId - b.playerId);
             session = { levelId: s.levelId, characterId: s.characterId, seed: s.seed, randomState: s.randomState, elapsedSeconds: s.elapsedSeconds, players };
+            if (level.coop) {
+                if (!object(s.coop) || typeof s.coop.gateLatched !== 'boolean' || typeof s.coop.completed !== 'boolean'
+                    || (s.coop.completed && (!s.coop.gateLatched || !players.every(p => inside(level.coop!.exit, p))))) throw new Error('Invalid cooperative save state');
+                session.coop = { gateLatched: s.coop.gateLatched, completed: s.coop.completed };
+            } else if (s.coop !== undefined) throw new Error('Cooperative state requires a cooperative level');
         }
         // Reconstruct only known DTO fields; never return caller-owned engine objects.
-        return { schemaVersion: 2, profileId: value.profileId, slotId: value.slotId, savedAt: value.savedAt,
+        return { schemaVersion: 3, profileId: value.profileId, slotId: value.slotId, savedAt: value.savedAt,
             profile: { unlockedContentIds: unlocked, completedLevelIds: completed, sessionsStarted: profile.sessionsStarted }, session };
     }
 }

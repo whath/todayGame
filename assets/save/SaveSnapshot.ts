@@ -1,11 +1,13 @@
-export const SAVE_SCHEMA_VERSION = 2;
+import { CoopSnapshot } from '../core/CoopChallenge';
+export const SAVE_SCHEMA_VERSION = 3;
 export interface ProfileSnapshot { unlockedContentIds: string[]; completedLevelIds: string[]; sessionsStarted: number }
 export interface SessionSnapshot {
     levelId: string; characterId: string; seed: number; randomState: number; elapsedSeconds: number;
     players: { playerId: 1 | 2; x: number; y: number }[];
+    coop?: CoopSnapshot;
 }
 export interface SaveSnapshot {
-    schemaVersion: 2; profileId: string; slotId: string; savedAt: number;
+    schemaVersion: 3; profileId: string; slotId: string; savedAt: number;
     profile: ProfileSnapshot; session: SessionSnapshot | null;
 }
 /** Adapter owns the namespace and storage medium; keys here are logical slot keys. */

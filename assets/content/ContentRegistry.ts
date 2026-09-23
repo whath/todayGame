@@ -1,5 +1,6 @@
 import { Box } from '../core/CollisionWorld';
 import { MoveVector } from '../core/InputTypes';
+import { CoopDefinition, overlaps } from '../core/CoopChallenge';
 export type ContentId = string;
 interface ContentBase { readonly id: ContentId; readonly nameId: string; readonly dependencies: readonly ContentId[] }
 export interface CharacterDefinition extends ContentBase {
@@ -8,6 +9,7 @@ export interface CharacterDefinition extends ContentBase {
 export interface LevelDefinition extends ContentBase {
     readonly kind: 'level'; readonly characterId: ContentId; readonly bounds: Box;
     readonly obstacles: readonly Box[]; readonly spawns: readonly MoveVector[];
+    readonly coop?: CoopDefinition;
 }
 export type ContentDefinition = CharacterDefinition | LevelDefinition;
 function freeze<T>(value: T): T {
@@ -47,6 +49,17 @@ export class ContentRegistry {
                 }
                 if (d.obstacles.some(box => box.x < d.bounds.x || box.y < d.bounds.y || box.x + box.width > d.bounds.x + d.bounds.width || box.y + box.height > d.bounds.y + d.bounds.height)) throw new Error(`Obstacle outside level: ${id}`);
                 if (d.spawns.length !== 2 || d.spawns.some(spawn => !isWalkable(d, spawn, character.halfSize))) throw new Error(`Invalid spawns: ${id}`);
+                if (d.coop) {
+                    const c = d.coop;
+                    for (const box of [c.plate, c.gate, c.exit]) {
+                        if (![box.x, box.y, box.width, box.height].every(Number.isFinite) || box.width <= 0 || box.height <= 0
+                            || box.x < d.bounds.x || box.y < d.bounds.y || box.x + box.width > d.bounds.x + d.bounds.width
+                            || box.y + box.height > d.bounds.y + d.bounds.height) throw new Error(`Invalid cooperative region: ${id}`);
+                    }
+                    if (!Number.isFinite(c.interactRadius) || c.interactRadius <= 0 || c.interactRadius > 150
+                        || !isWalkable(d, c.terminal, character.halfSize)
+                        || d.spawns.some(p => overlaps(c.gate, p, character.halfSize))) throw new Error(`Invalid cooperative interaction: ${id}`);
+                }
             }
             visiting.delete(id); visited.add(id);
         };

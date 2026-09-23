@@ -20,6 +20,9 @@ import { PrototypeHUD } from '../ui/PrototypeHUD';
 import { RuntimeChoice, RuntimeScreen, RuntimeScreenModel } from '../ui/RuntimeScreen';
 import { SettingsMenu } from '../ui/SettingsMenu';
 import { PrototypeRoom } from './PrototypeRoom';
+import { COOP_LEVEL_ID } from '../content/CoopLevel';
+import { CoopActor, CoopChallenge } from '../core/CoopChallenge';
+import { CoopPresentation } from './CoopPresentation';
 const { ccclass, property } = _decorator;
 
 @ccclass('PrototypeBootstrap')
@@ -39,6 +42,9 @@ export class PrototypeBootstrap extends Component {
     private readonly session = new GameSession();
     private room = new PrototypeRoom();
     private players: PlayerController[] = [];
+    private challenge: CoopChallenge | null = null;
+    private challengeView: CoopPresentation | null = null;
+    private selectedLevel = COOP_LEVEL_ID;
     private profile: ProfileSnapshot = { unlockedContentIds: [PLAYER_CONTENT_ID, ROOM_CONTENT_ID], completedLevelIds: [], sessionsStarted: 0 };
     private pendingResume: SessionSnapshot | null = null;
     private activeSession: SessionSnapshot | null = null;
@@ -102,7 +108,7 @@ export class PrototypeBootstrap extends Component {
         if (request.target !== 'gameplay') {
             progress(1);
             return { activate: () => {
-                this.players = []; this.activeSession = null;
+                this.players = []; this.activeSession = null; this.challenge = null; this.challengeView = null;
                 this.services.pause.clearManual(); this.services.pause.set('controller', false);
                 this.inputManager.releaseAll(); this.session.returnToLobby(this.inputManager);
                 this.camera.node.setPosition(0, 0, 1000); this.camera.orthoHeight = 360;
@@ -127,9 +133,13 @@ export class PrototypeBootstrap extends Component {
             const snapshot: SessionSnapshot = resume ?? { levelId: level.id, characterId: character.id, seed, randomState: seed, elapsedSeconds: 0,
                 players: room.spawns.map((spawn, index) => ({ playerId: (index + 1) as 1 | 2, x: spawn.x, y: spawn.y })) };
             players.forEach(player => player.reset(snapshot.players.find(p => p.playerId === player.playerId)!));
+            const challenge = level.coop ? new CoopChallenge(level.coop, character.halfSize, snapshot.coop) : null;
+            if (challenge) challenge.update(players.map(p => ({ playerId: p.playerId, x: p.node.position.x, y: p.node.position.y, interact: false })), false);
+            const challengeView = challenge ? new CoopPresentation(root, challenge, this.services.localization) : null;
             progress(1);
             return { activate: () => {
                 this.players = players; this.room = room; this.activeSession = snapshot;
+                this.challenge = challenge; this.challengeView = challengeView; this.selectedLevel = level.id;
                 this.services.random.reset(snapshot.seed, snapshot.randomState); this.services.time.restore(snapshot.elapsedSeconds);
                 if (!resume) this.profile.sessionsStarted++;
                 this.pendingResume = null; root.active = true;
@@ -143,7 +153,7 @@ export class PrototypeBootstrap extends Component {
     private request(target: TransitionRequest['target']): void {
         if (this.flow.busy) return;
         this.message = '';
-        void this.flow.requestTransition({ target, contentId: this.pendingResume?.levelId ?? ROOM_CONTENT_ID }).then(ok => {
+        void this.flow.requestTransition({ target, contentId: this.pendingResume?.levelId ?? (this.lab ? ROOM_CONTENT_ID : this.selectedLevel) }).then(ok => {
             if (!ok && this.isValid) this.message = this.t('runtime.transitionFailed', { error: this.flow.loading.error });
         });
     }
@@ -154,6 +164,8 @@ export class PrototypeBootstrap extends Component {
                 ? this.t('runtime.saveFailed', { error: loaded.error ?? '' }) : this.t('runtime.noSave'); return;
         }
         if (loaded.snapshot) this.profile = loaded.snapshot.profile;
+        this.selectedLevel = resume ? loaded.snapshot!.session!.levelId : COOP_LEVEL_ID;
+        if (!this.profile.unlockedContentIds.includes(COOP_LEVEL_ID)) this.profile.unlockedContentIds.push(COOP_LEVEL_ID);
         this.pendingResume = resume ? loaded.snapshot!.session : null;
         this.request('localJoin');
         if (loaded.status === 'backup' || loaded.status === 'temporary') this.message = this.t('runtime.recovered', { source: loaded.status });
@@ -163,7 +175,8 @@ export class PrototypeBootstrap extends Component {
         if (this.activeSession && this.players.length === 2) session = { ...this.activeSession,
             seed: this.services.random.seed, randomState: this.services.random.currentState, elapsedSeconds: this.services.time.gameElapsed,
             players: this.players.map(player => ({ playerId: player.playerId, x: player.node.position.x, y: player.node.position.y })) };
-        return { schemaVersion: 2, profileId: 'profile.default', slotId: 'slot1', savedAt: Date.now(), profile: this.profile, session };
+        if (session && this.challenge) session.coop = this.challenge.snapshot();
+        return { schemaVersion: 3, profileId: 'profile.default', slotId: 'slot1', savedAt: Date.now(), profile: this.profile, session };
     }
     private save(reason: string): boolean {
         const ok = this.saves.requestSave(this.snapshot(), reason);
@@ -184,7 +197,7 @@ export class PrototypeBootstrap extends Component {
         this.pendingResume = null; this.request('mainMenu');
     }
     private leaveLab(): void {
-        this.lab = ''; this.pendingResume = null;
+        this.lab = ''; this.pendingResume = null; this.selectedLevel = COOP_LEVEL_ID;
         this.profile = { unlockedContentIds: [PLAYER_CONTENT_ID, ROOM_CONTENT_ID], completedLevelIds: [], sessionsStarted: 0 };
         this.services.time.setScale(1); this.request('mainMenu');
     }
@@ -237,18 +250,29 @@ export class PrototypeBootstrap extends Component {
         }
         this.session.update(this.inputManager);
         this.services.pause.set('controller', this.flow.state.current === 'gameplay' && !this.inputManager.bothReady && this.lab !== 'CameraLab');
-        const paused = this.flow.state.current !== 'gameplay' || this.services.pause.paused || hadOverlay;
+        const paused = this.flow.state.current !== 'gameplay' || this.services.pause.paused || hadOverlay || this.challenge?.completed === true;
         this.services.time.tick(dt, paused);
-        if (command.reset && !paused && this.focused) this.players.forEach((p, i) => p.reset(this.room.spawns[i]));
+        if (command.reset && !paused && this.focused) { this.restart(); this.keyboard.endFrame(); return; }
         this.keyboard.endFrame();
-        this.players.forEach(player => player.tick(this.services.time.gameDelta, this.room.collision, !paused));
+        if (this.challenge && !paused) this.challenge.update(this.challengeActors(), false);
+        const collision = this.challenge?.collision(this.room.bounds, this.room.obstacles) ?? this.room.collision;
+        this.players.forEach(player => player.tick(this.services.time.gameDelta, collision, !paused));
+        if (this.challenge && !paused) {
+            const latched = this.challenge.gateLatched;
+            this.challenge.update(this.challengeActors(), true);
+            if (this.challenge.completed) {
+                if (!this.profile.completedLevelIds.includes(this.selectedLevel)) this.profile.completedLevelIds.push(this.selectedLevel);
+                this.save('challenge-completed');
+            } else if (!latched && this.challenge.gateLatched) this.save('relay-checkpoint');
+        }
+        this.challengeView?.update();
         if (this.lab === 'CameraLab' && this.players.length === 2 && !paused) {
             const phase = this.services.time.gameElapsed;
             this.players[0].node.setPosition(-250 - Math.sin(phase * 0.5) * 200, -100 + Math.cos(phase * 0.5) * 150);
             this.players[1].node.setPosition(250 + Math.sin(phase * 0.5) * 200, 100 - Math.cos(phase * 0.5) * 150);
         }
         if (this.players.length) { this.sharedCamera.smoothing = this.services.accessibility.cameraSmoothing; this.sharedCamera.tick(this.services.time.gameDelta); }
-        this.hud.update(this.inputManager, this.session);
+        this.hud.update(this.inputManager, this.session, this.challenge ? this.challengeHints() : undefined);
         this.screen.update(this.screenModel(), this.services.accessibility.uiScale, this.services.time.uiDelta, !this.menu.isOpen);
         this.menu.update(this.services.accessibility.uiScale);
     }
@@ -262,8 +286,9 @@ export class PrototypeBootstrap extends Component {
         else if (this.subpage === 'tools') {
             id = 'tools'; title = this.t('runtime.tools'); detail = this.console.execute('help');
             choices = [choice('runtime.slow', () => { this.console.execute('set_timescale 0.5'); }), choice('runtime.normal', () => { this.console.execute('set_timescale 1'); }),
-                choice('runtime.newSeed', () => { this.console.execute('set_seed 8492134'); }), choice('runtime.shuffle', () => {
-                    if (this.players.length) this.services.random.shuffle(this.room.spawns).forEach((p, i) => this.players[i].reset(p));
+                choice('runtime.newSeed', () => { this.console.execute('set_seed 8492134'); }), choice(this.challenge ? 'coop.retry' : 'runtime.shuffle', () => {
+                    if (this.challenge) this.restart();
+                    else if (this.players.length) this.services.random.shuffle(this.room.spawns).forEach((p, i) => this.players[i].reset(p));
                 }), choice('runtime.back', () => { this.subpage = 'none'; })];
         } else if (this.subpage === 'labs') {
             id = 'labs'; title = this.t('runtime.labs'); detail = this.t('runtime.labHint');
@@ -297,6 +322,9 @@ export class PrototypeBootstrap extends Component {
             }
             choices = [choice('runtime.start', () => { if (this.inputManager.bothReady) this.request('gameplay'); else this.message = this.t('runtime.needPlayers'); }), settings,
                 choice('runtime.back', () => this.lab ? this.leaveLab() : this.request('mainMenu'))];
+        } else if (state === 'gameplay' && this.challenge?.completed && !this.services.pause.reasons.includes('manual')) {
+            id = 'completed'; title = this.t('coop.success'); detail = this.t('coop.successDetail');
+            choices = [choice('coop.retry', () => this.restart()), choice('runtime.main', () => this.returnToMain()), settings];
         } else if (state === 'gameplay' && this.services.pause.reasons.includes('manual')) {
             id = 'pause'; title = this.t('runtime.pause');
             detail = this.t('runtime.seed', { seed: this.services.random.seed, time: this.services.time.gameElapsed.toFixed(1) });
@@ -308,6 +336,19 @@ export class PrototypeBootstrap extends Component {
         return { id, title, detail: detail + (this.message ? `\n${this.message}` : ''), choices,
             footer: this.t('runtime.nav', { confirm: this.services.glyphs.get('confirm'), back: this.services.glyphs.get('back'), settings: this.services.glyphs.get('settings') }),
             buildLabel: this.services.policy.buildLabel ? `${build.version} / ${build.buildId} / ${build.commit} / ${build.variant} / seed ${this.services.random.seed}` : '' };
+    }
+    private challengeActors(): CoopActor[] {
+        return this.players.map(p => ({ playerId: p.playerId, x: p.node.position.x, y: p.node.position.y,
+            interact: this.inputManager.slots[p.playerId - 1].isInteractPressed() }));
+    }
+    private challengeHints(): { title: string; help: string } {
+        const c = this.challenge!;
+        const help = this.challengeActors().map(p => {
+            const id = c.gateLatched ? 'coop.toExit' : c.platePlayer === p.playerId ? 'coop.keepPlate'
+                : c.nearTerminal(p) ? (c.platePlayer ? 'coop.useTerminal' : 'coop.needPartner') : 'coop.findRole';
+            return this.t(id, { player: p.playerId, key: this.services.glyphs.get('interact', p.playerId) });
+        }).join('\n');
+        return { title: this.t(c.gateLatched ? 'coop.goalExit' : 'coop.goalRelay'), help };
     }
     private registerCommands(): void {
         this.console.register('reload_scene', () => { this.restart(); return 'requested'; });

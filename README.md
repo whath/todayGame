@@ -1,8 +1,16 @@
 # DuoGame / todayGame
 
-Windows PC 本地双人基础工程，Cocos Creator **3.8.6 + TypeScript**。当前为 **0.3.0-dev — Runtime & Content Foundation**，按 [v3 规划](docs/reference/GAME_DEV_CODEX_MASTER_PLAN_V0.3.md) 的 R0–R11 实现基础代码。R12 的 Windows 构建和实机 Gate 尚未通过，因此没有发布 Tag。
+Windows PC 本地双人基础工程，Cocos Creator **3.8.6 + TypeScript**。当前为 **0.4.0-dev — Cooperative Relay Experiment**，按 [v3 规划](docs/reference/GAME_DEV_CODEX_MASTER_PLAN_V0.3.md) 的 R0–R11 实现基础代码。R12 的 Windows 构建和实机 Gate 尚未通过，因此没有发布 Tag。
 
-## 本轮变化
+## 当前可玩内容（尚未实机验收）
+
+新游戏进入“守门与接力”：一人站住左侧踏板，另一人穿门并在终端附近按交互键（默认 P1 E / P2 L，手柄 West），让门永久开启；两人共同进入右侧出口完成挑战。终端解锁和通关自动保存。F5 或暂停菜单重开；结果菜单可再次挑战。旧存档继续进入原测试房间，四个 Lab 保留。
+
+用户本轮要求暂不运行游戏，未安装 Creator，Windows 和实机 Gate 继续暂缓。自动验证：68 项测试、官方类型检查和 62 个脚本语法转译通过。
+
+[一页游戏定义](docs/GAME_DEFINITION.md) · [挑战规则](docs/COOP_CHALLENGE.md) · [本轮验证](docs/VALIDATION_V0.4.md)
+
+## 基础层能力
 
 - 主菜单 → 双人加入 → 游戏 → 暂停 / 设置 / 返回；逻辑场景切换锁、加载进度、预加载及失败恢复。
 - Profile / Slot / Session 数据快照、schema 校验与迁移、临时写入回读、上一版本备份和恢复；与设置独立存储。
@@ -27,7 +35,7 @@ Windows PC 本地双人基础工程，Cocos Creator **3.8.6 + TypeScript**。当
 | 暂停 | Esc | Options / Start |
 | 设置 | F2 或菜单选项 | 菜单选项；主菜单 / 加入页可按 Options / Start |
 | 设置分类 | Tab / Shift+Tab | R1 / L1 |
-| 重置位置 | F5 | 暂停菜单重新开始 |
+| 重开当前房间 | F5 | 暂停菜单重新开始 |
 | 调试信息 | F1，仅 Development | 开发工具菜单 |
 
 | 默认键盘配置 | 移动 | 主动作 | 次动作 | 交互 |

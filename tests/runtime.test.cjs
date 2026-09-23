@@ -14,7 +14,7 @@ const { TimeService } = core('runtime/TimeService');
 const content = createPrototypeContent();
 const serializer = new SaveSerializer(content);
 function snapshot() {
-    return { schemaVersion: 2, profileId: 'profile.default', slotId: 'slot1', savedAt: 1234,
+    return { schemaVersion: 3, profileId: 'profile.default', slotId: 'slot1', savedAt: 1234,
         profile: { unlockedContentIds: [PLAYER_CONTENT_ID, ROOM_CONTENT_ID], completedLevelIds: [], sessionsStarted: 1 },
         session: { levelId: ROOM_CONTENT_ID, characterId: PLAYER_CONTENT_ID, seed: 42, randomState: 42, elapsedSeconds: 12,
             players: content.level(ROOM_CONTENT_ID).spawns.map((p, i) => ({ playerId: i + 1, ...p })) } };
@@ -202,7 +202,7 @@ test('saving a migrated slot keeps the original v1 bytes in backup', () => {
     const data=snapshot(); data.schemaVersion=1; data.profile.unlocks=data.profile.unlockedContentIds; delete data.profile.unlockedContentIds; delete data.session.randomState;
     const raw=JSON.stringify(data), storage=memory(), service=new SaveService(storage,serializer);
     storage.values.set(key+'/committed',raw); assert.equal(service.requestSave(snapshot(),'migration'),true);
-    assert.equal(storage.values.get(key+'/backup'),raw); assert.equal(JSON.parse(storage.values.get(key+'/committed')).schemaVersion,2);
+    assert.equal(storage.values.get(key+'/backup'),raw); assert.equal(JSON.parse(storage.values.get(key+'/committed')).schemaVersion,3);
 });
 test('domain subscriptions unsubscribe and a failing observer cannot stop other observers', () => {
     const { DomainEvent }=core('runtime/DomainEvent'); const errors=[],seen=[]; const event=new DomainEvent(e=>errors.push(e));

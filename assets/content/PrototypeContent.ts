@@ -1,4 +1,5 @@
 import { ContentRegistry, LevelDefinition } from './ContentRegistry';
+import { COOP_LEVEL } from './CoopLevel';
 export const PLAYER_CONTENT_ID = 'character.player.default';
 export const ROOM_CONTENT_ID = 'level.prototype.room_01';
 export const PLAYER_ASSET_ID = 'prefab.player';
@@ -15,5 +16,5 @@ export const PROTOTYPE_LEVEL: LevelDefinition = {
 export function createPrototypeContent(): ContentRegistry {
     const registry = new ContentRegistry();
     registry.register({ id: PLAYER_CONTENT_ID, kind: 'character', nameId: 'content.defaultPlayer', dependencies: [], prefabId: PLAYER_ASSET_ID, speed: 230, halfSize: 18 });
-    registry.register(PROTOTYPE_LEVEL); return registry;
+    registry.register(PROTOTYPE_LEVEL); registry.register(COOP_LEVEL); return registry;
 }
