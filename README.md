@@ -1,14 +1,20 @@
 # DuoGame / todayGame
 
-Windows PC 本地双人基础工程，Cocos Creator **3.8.6 + TypeScript**。当前为 **0.4.0-dev — Cooperative Relay Experiment**，按 [v3 规划](docs/reference/GAME_DEV_CODEX_MASTER_PLAN_V0.3.md) 的 R0–R11 实现基础代码。R12 的 Windows 构建和实机 Gate 尚未通过，因此没有发布 Tag。
+Windows PC 本地双人基础工程，Cocos Creator **3.8.6 + TypeScript**。当前为 **0.5.0-dev — Co-op Robustness & Universal Gameplay Kernel**，按 [需求 v4](docs/reference/GAME_DEV_CODEX_MASTER_PLAN_V4.md) 补齐差量。Windows、Prototype 和 Vertical Slice Gate 尚未通过，没有发布 Tag。
+
+## 本轮差量
+
+新增 Player Presence、交互仲裁／所有权、空间与碰撞策略、安全出生、菜单打开者归属、目标反馈、Actor／Action／Trigger 合同和纯 HUD 模型。已有接力关已接入这些合同；加入页支持单独退出槽位。增加 KeyboardGhostingLab 和内容校验工具。
+
+[差量对照](docs/PLAN_DELTA_V4.md) · [合作健壮性](docs/COOP_ROBUSTNESS.md) · [玩法内核](docs/GAMEPLAY_KERNEL.md) · [Prototype Gate](docs/PROTOTYPE_GATE.md)
 
 ## 当前可玩内容（尚未实机验收）
 
-新游戏进入“守门与接力”：一人站住左侧踏板，另一人穿门并在终端附近按交互键（默认 P1 E / P2 L，手柄 West），让门永久开启；两人共同进入右侧出口完成挑战。终端解锁和通关自动保存。F5 或暂停菜单重开；结果菜单可再次挑战。旧存档继续进入原测试房间，四个 Lab 保留。
+新游戏进入“守门与接力”：一人站住左侧踏板，另一人穿门并在终端附近按交互键（默认 P1 E / P2 L，手柄 West），让门永久开启；两人共同进入右侧出口完成挑战。终端解锁和通关自动保存。F5 或暂停菜单重开；结果菜单可再次挑战。旧存档继续进入原测试房间，原四个 Lab 保留。
 
-用户本轮要求暂不运行游戏，未安装 Creator，Windows 和实机 Gate 继续暂缓。自动验证：68 项测试、官方类型检查和 62 个脚本语法转译通过。
+用户本轮要求暂不运行游戏，未安装 Creator，Windows 和实机 Gate 继续暂缓。自动验证：88 项测试、官方类型检查、68 个脚本语法转译，以及内容和资源引用校验通过。
 
-[一页游戏定义](docs/GAME_DEFINITION.md) · [挑战规则](docs/COOP_CHALLENGE.md) · [本轮验证](docs/VALIDATION_V0.4.md)
+[一页游戏定义](docs/GAME_DEFINITION.md) · [挑战规则](docs/COOP_CHALLENGE.md) · [本轮验证](docs/VALIDATION_PLAN_V4.md)
 
 ## 基础层能力
 
@@ -57,6 +63,6 @@ node tools/prepare-build.cjs development
 
 开发依赖只有 TypeScript 5.9.3 和官方 Cocos 3.8.6 声明。构建准备命令只生成配置和 BuildInfo，不运行 Creator。切回编辑器前重新准备 development；Windows 构建见 [构建变体](docs/BUILD_VARIANTS.md)。
 
-当前自动结果和待验收项见 [v0.3 验证记录](docs/VALIDATION_V0.3.md)。本轮没有增加生产依赖。
+当前自动结果和待验收项见 [当前验证记录](docs/VALIDATION_PLAN_V4.md)。本轮没有增加生产依赖。
 
 文档：[架构](docs/ARCHITECTURE.md) · [运行时](docs/RUNTIME_DESIGN.md) · [存档](docs/SAVE_DESIGN.md) · [内容与资源](docs/CONTENT_DESIGN.md) · [设置](docs/SETTINGS_DESIGN.md) · [实验场景](docs/TEST_LABS.md) · [路线图](docs/ROADMAP.md) · [日志](docs/DEVLOG.md)

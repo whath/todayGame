@@ -1,8 +1,10 @@
 import { EMPTY_INPUT, InputFrame, MoveVector, PlayerId } from '../core/InputTypes';
 import { InputDevice } from './InputDevice';
+import { PlayerPresence } from '../core/PlayerPresence';
 
 export class PlayerInputSlot {
-    public constructor(public readonly playerId: PlayerId) {}
+    public readonly presence: PlayerPresence;
+    public constructor(public readonly playerId: PlayerId) { this.presence = new PlayerPresence(playerId); }
     private device: InputDevice | null = null;
     public get deviceId(): string | null { return this.device?.id ?? null; }
     public get deviceLabel(): string { return this.device?.label ?? 'Press a mapped key / controller button'; }
@@ -15,6 +17,9 @@ export class PlayerInputSlot {
     public isInteractPressed(): boolean { return this.frame.interactPressed; }
 
     /** Ownership is coordinated exclusively by InputManager. */
-    public bind(device: InputDevice): void { this.device = device; }
-    public release(): void { this.device = null; }
+    public bind(device: InputDevice): void {
+        if (this.device && !this.device.connected) this.presence.disconnect();
+        this.presence.join(); this.device = device; this.presence.ready();
+    }
+    public release(): void { this.device = null; this.presence.leave(); }
 }

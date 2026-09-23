@@ -7,7 +7,7 @@
 | DEBUG 日志 | 开启 | 关闭 | 关闭 |
 | INFO 日志 | 开启 | 开启 | 关闭 |
 | Build 标记 | 显示 | 显示 | 隐藏 |
-| 构建参与场景 | Prototype + 四个 Lab | 仅 Prototype | 仅 Prototype |
+| 构建参与场景 | Prototype + 五个 Lab | 仅 Prototype | 仅 Prototype |
 
 ## 准备
 

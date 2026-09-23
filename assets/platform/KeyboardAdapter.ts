@@ -13,6 +13,11 @@ export class KeyboardAdapter {
     private readonly mappingSignatures = new Map<string, string>();
     private readonly waitForRelease = new Set<string>();
     public readonly devices: readonly KeyboardInputDevice[];
+    private peakKeys = 0;
+    public get diagnosticKeys(): { held: readonly string[]; peak: number } {
+        this.peakKeys = Math.max(this.peakKeys, this.held.size);
+        return { held: [...this.held].map(code => [...this.keyCodes].find(([, value]) => value === code)?.[0] ?? String(code)), peak: this.peakKeys };
+    }
 
     public constructor(private readonly settings: () => SettingsSnapshot,
         private readonly owner: (id: string) => 1 | 2 | undefined) {

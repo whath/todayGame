@@ -23,6 +23,9 @@ import { PrototypeRoom } from './PrototypeRoom';
 import { COOP_LEVEL_ID } from '../content/CoopLevel';
 import { CoopActor, CoopChallenge } from '../core/CoopChallenge';
 import { CoopPresentation } from './CoopPresentation';
+import { SpawnService } from '../core/SpawnService';
+import { resolvePairMotion } from '../core/CoopPolicies';
+import { coopViewModel } from '../core/GameHUDViewModel';
 const { ccclass, property } = _decorator;
 
 @ccclass('PrototypeBootstrap')
@@ -45,6 +48,14 @@ export class PrototypeBootstrap extends Component {
     private challenge: CoopChallenge | null = null;
     private challengeView: CoopPresentation | null = null;
     private selectedLevel = COOP_LEVEL_ID;
+    private readonly spawns = new SpawnService();
+    private separationWarning = false;
+    private menuSource = 'keyboard';
+    private pauseOwner: string | null = null;
+    private allowPointer = (): boolean => {
+        if (!this.services.navigation.accepts('keyboard')) return false;
+        this.menuSource = 'keyboard'; return true;
+    };
     private profile: ProfileSnapshot = { unlockedContentIds: [PLAYER_CONTENT_ID, ROOM_CONTENT_ID], completedLevelIds: [], sessionsStarted: 0 };
     private pendingResume: SessionSnapshot | null = null;
     private activeSession: SessionSnapshot | null = null;
@@ -74,7 +85,7 @@ export class PrototypeBootstrap extends Component {
         this.camera.clearFlags = Camera.ClearFlag.SOLID_COLOR; this.camera.clearColor = new Color(14, 21, 33); this.camera.visibility = Layers.Enum.UI_2D;
         this.sharedCamera = cameraNode.addComponent(SharedCamera);
         this.hud = new PrototypeHUD(this.camera, this.services);
-        this.screen = new RuntimeScreen(this.camera);
+        this.screen = new RuntimeScreen(this.camera, this.allowPointer);
         try {
             this.services.boot(id => id === PLAYER_ASSET_ID && this.playerPrefab !== null, this.lab !== '');
         } catch (error) { this.hud.showError(String(error)); this.services.logger.log('BOOT', 'ERROR', String(error)); return; }
@@ -94,14 +105,14 @@ export class PrototypeBootstrap extends Component {
         this.menu = new SettingsMenu(this.camera, this.services.settings, this.services.localization, open => {
             this.services.pause.set('settings', open);
             this.removeSettings?.(); this.removeSettings = null;
-            if (open) this.removeSettings = this.services.navigation.push('settings', 'modal', command => this.menu.handle(command));
-        }, () => this.returnToJoin());
+            if (open) this.removeSettings = this.services.navigation.push('settings', 'modal', command => this.menu.handle(command), this.services.navigation.owner ?? this.menuSource);
+        }, () => this.returnToJoin(), this.allowPointer);
         this.services.navigation.push('app', 'screen', command => this.handleApp(command));
         this.registerCommands();
         this.keyboard.devices.forEach(device => this.inputManager.register(device));
         this.ready = true; this.startAdapters();
         this.services.diagnostics.visible = this.lab !== '' && this.services.policy.developerTools;
-        this.request(this.lab === 'InputLab' ? 'localJoin' : this.lab === 'CameraLab' ? 'gameplay' : 'mainMenu');
+        this.request((this.lab === 'InputLab' || this.lab === 'KeyboardGhostingLab') ? 'localJoin' : this.lab === 'CameraLab' ? 'gameplay' : 'mainMenu');
         if (this.lab === 'SettingsLab') this.menu.open();
     }
     private async prepare(request: TransitionRequest, scope: AssetScope<Prefab>, progress: (value: number) => void): Promise<PreparedView> {
@@ -112,7 +123,7 @@ export class PrototypeBootstrap extends Component {
                 this.services.pause.clearManual(); this.services.pause.set('controller', false);
                 this.inputManager.releaseAll(); this.session.returnToLobby(this.inputManager);
                 this.camera.node.setPosition(0, 0, 1000); this.camera.orthoHeight = 360;
-                this.subpage = 'none';
+                this.subpage = 'none'; this.pauseOwner = null;
             }, dispose: () => {} };
         }
         const level = this.services.content.level(request.contentId ?? ROOM_CONTENT_ID);
@@ -132,7 +143,13 @@ export class PrototypeBootstrap extends Component {
             const seed = resume?.seed ?? ((Date.now() >>> 0) || 1);
             const snapshot: SessionSnapshot = resume ?? { levelId: level.id, characterId: character.id, seed, randomState: seed, elapsedSeconds: 0,
                 players: room.spawns.map((spawn, index) => ({ playerId: (index + 1) as 1 | 2, x: spawn.x, y: spawn.y })) };
-            players.forEach(player => player.reset(snapshot.players.find(p => p.playerId === player.playerId)!));
+            const occupied: { x: number; y: number }[] = [];
+            for (const player of players) {
+                const preferred = snapshot.players.find(p => p.playerId === player.playerId)!;
+                const obstacles = !resume && level.coop ? [...room.obstacles, level.coop.gate] : room.obstacles;
+                const safe = this.spawns.resolve(preferred, room.spawns, room.bounds, obstacles, character.halfSize, resume && level.playerCollision !== 'solid' ? [] : occupied);
+                player.reset(safe); occupied.push(safe);
+            }
             const challenge = level.coop ? new CoopChallenge(level.coop, character.halfSize, snapshot.coop) : null;
             if (challenge) challenge.update(players.map(p => ({ playerId: p.playerId, x: p.node.position.x, y: p.node.position.y, interact: false })), false);
             const challengeView = challenge ? new CoopPresentation(root, challenge, this.services.localization) : null;
@@ -146,6 +163,7 @@ export class PrototypeBootstrap extends Component {
                 this.services.pause.clearManual(); this.subpage = 'none';
                 this.sharedCamera.initialize(this.camera, players.map(p => p.node), room.bounds);
             }, dispose: () => {
+                challenge?.interactions.clear();
                 root.active = false; root.destroy(); if (this.players === players) this.players = [];
             } };
         } catch (error) { root.destroy(); throw error; }
@@ -208,7 +226,7 @@ export class PrototypeBootstrap extends Component {
     private handleApp(command: MenuInput): void {
         if (this.flow.busy) return;
         const state = this.flow.state.current;
-        if (command.pause && state === 'gameplay') { this.services.pause.toggleManual(); return; }
+        if (command.pause && state === 'gameplay') { this.pauseOwner = this.menuSource; this.services.pause.toggleManual(); return; }
         if (command.settings) { this.menu.open(); return; }
         if (command.back) {
             if (this.subpage !== 'none') this.subpage = 'none';
@@ -224,22 +242,38 @@ export class PrototypeBootstrap extends Component {
             if (command.back && this.subpage === 'tools') this.subpage = 'none';
             else if (command.back || command.pause) { this.subpage = 'none'; this.services.pause.clearManual(); }
             else if (command.settings) this.menu.open(); else this.screen.handle(command);
-        });
+        }, this.pauseOwner);
         if (!paused && this.removePause) { this.removePause(); this.removePause = null; }
     }
     protected update(dt: number): void {
         if (!this.ready) return;
         this.services.settings.tick(); this.services.diagnostics.sample(dt); this.syncPauseLayer();
-        const keyboard = this.keyboard.menuInput(); const pad = this.gamepads.menuInput();
-        const command: MenuInput = { ...keyboard };
-        const keys = ['up', 'down', 'left', 'right', 'accept', 'back', 'tab', 'previousTab', 'settings', 'pause'] as const;
-        for (const key of keys) command[key] = keyboard[key] || pad[key];
-        if (keys.some(key => pad[key])) this.services.glyphs.activeDevice = 'gamepad';
-        else if (keys.some(key => keyboard[key]) || keyboard.bindingKey !== undefined) this.services.glyphs.activeDevice = 'keyboard';
+        const keyboard = this.keyboard.menuInput();
+        const pads = this.gamepads.menuInputs();
+        // The owner explicitly opened key capture: accept the keyboard value, not its navigation commands.
+        if (this.focused && this.menu.isOpen && this.menu.capturingBinding && keyboard.bindingKey !== undefined) {
+            this.menu.handle({ bindingKey: keyboard.bindingKey });
+            keyboard.bindingKey = undefined; keyboard.up = keyboard.down = keyboard.left = keyboard.right = false;
+        }
+        // A disconnected menu owner must not trap the surviving player in a modal.
+        for (const slot of this.inputManager.slots) if (slot.assigned && !slot.connected) {
+            this.services.navigation.releaseOwner('player.' + slot.playerId);
+            this.challenge?.interactions.releaseActor('player.' + slot.playerId);
+        }
+        const owner = this.services.navigation.owner;
+        if (owner?.startsWith('gamepad:') && !this.gamepads.connectedIds.includes(owner)) this.services.navigation.releaseOwner(owner);
+        const frames = [{ source: 'keyboard', input: keyboard }, ...pads.map(p => {
+            const player = this.inputManager.playerForDevice(p.deviceId);
+            return { source: player ? 'player.' + player : p.deviceId, input: p.input };
+        })];
+        const chosen = frames.find(f => this.services.navigation.accepts(f.source) && Object.values(f.input).some(v => v === true));
+        const command: MenuInput = chosen?.input ?? {};
         const hadOverlay = this.menu.isOpen || this.services.pause.paused || this.flow.state.current !== 'gameplay';
-        if (this.focused) {
+        if (this.focused && chosen) {
+            this.menuSource = chosen.source;
+            this.services.glyphs.activeDevice = chosen.source === 'keyboard' ? 'keyboard' : 'gamepad';
             if (command.accept || command.back) this.feedback.request({ kind: command.accept ? 'uiConfirm' : 'uiCancel' });
-            this.services.navigation.dispatch(command);
+            this.services.navigation.dispatch(command, chosen.source);
             if (command.diagnostics) this.services.diagnostics.toggle();
         }
         this.inputManager.update(this.focused && this.flow.state.current === 'localJoin' && !this.menu.isOpen && !this.flow.busy);
@@ -256,12 +290,30 @@ export class PrototypeBootstrap extends Component {
         this.keyboard.endFrame();
         if (this.challenge && !paused) this.challenge.update(this.challengeActors(), false);
         const collision = this.challenge?.collision(this.room.bounds, this.room.obstacles) ?? this.room.collision;
+        const before = this.players.map(p => ({ x: p.node.position.x, y: p.node.position.y }));
         this.players.forEach(player => player.tick(this.services.time.gameDelta, collision, !paused));
+        let blockProgress = false;
+        if (!paused && this.players.length === 2 && this.lab !== 'CameraLab') {
+            const level = this.services.content.level(this.selectedLevel);
+            const half = this.services.content.character(level.characterId).halfSize;
+            const resolved = resolvePairMotion(before, this.challengeActors(), collision, half,
+                level.separation ?? { mode: 'warning', maximumDistance: 1600 }, level.playerCollision ?? 'off');
+            this.separationWarning = resolved.warning; blockProgress = resolved.blockProgress;
+            const occupied: { x: number; y: number }[] = [];
+            const positions = resolved.regroupRequested ? this.players.map((p, i) => {
+                const safe = this.spawns.resolve(this.room.spawns[i], this.room.spawns, this.room.bounds, collision.obstacles, half, occupied);
+                occupied.push(safe); return safe;
+            }) : resolved.positions;
+            this.players.forEach((p, i) => p.node.setPosition(positions[i].x, positions[i].y, 0));
+        }
         if (this.challenge && !paused) {
             const latched = this.challenge.gateLatched;
-            this.challenge.update(this.challengeActors(), true);
+            this.challenge.update(this.challengeActors(), !blockProgress);
+            this.challenge.lastResults.forEach(result => this.feedback.request({ kind: result.accepted ? 'interact' : 'failure',
+                target: result.actorId === 'player.1' ? 'Player1' : 'Player2' }));
             if (this.challenge.completed) {
                 if (!this.profile.completedLevelIds.includes(this.selectedLevel)) this.profile.completedLevelIds.push(this.selectedLevel);
+                this.feedback.request({ kind: 'success', target: 'AllPlayers' });
                 this.save('challenge-completed');
             } else if (!latched && this.challenge.gateLatched) this.save('relay-checkpoint');
         }
@@ -271,7 +323,7 @@ export class PrototypeBootstrap extends Component {
             this.players[0].node.setPosition(-250 - Math.sin(phase * 0.5) * 200, -100 + Math.cos(phase * 0.5) * 150);
             this.players[1].node.setPosition(250 + Math.sin(phase * 0.5) * 200, 100 - Math.cos(phase * 0.5) * 150);
         }
-        if (this.players.length) { this.sharedCamera.smoothing = this.services.accessibility.cameraSmoothing; this.sharedCamera.tick(this.services.time.gameDelta); }
+        if (this.players.length) { this.sharedCamera.smoothing = this.services.accessibility.cameraSmoothing; this.sharedCamera.tick(this.services.time.gameDelta); this.separationWarning ||= this.sharedCamera.offscreen; }
         this.hud.update(this.inputManager, this.session, this.challenge ? this.challengeHints() : undefined);
         this.screen.update(this.screenModel(), this.services.accessibility.uiScale, this.services.time.uiDelta, !this.menu.isOpen);
         this.menu.update(this.services.accessibility.uiScale);
@@ -292,12 +344,12 @@ export class PrototypeBootstrap extends Component {
                 }), choice('runtime.back', () => { this.subpage = 'none'; })];
         } else if (this.subpage === 'labs') {
             id = 'labs'; title = this.t('runtime.labs'); detail = this.t('runtime.labHint');
-            choices = ['InputLab', 'CameraLab', 'SettingsLab', 'SaveLab'].map(lab => choice(`runtime.lab.${lab}`, () => {
+            choices = ['InputLab', 'CameraLab', 'SettingsLab', 'SaveLab', 'KeyboardGhostingLab'].map(lab => choice(`runtime.lab.${lab}`, () => {
                 this.lab = lab;
                 this.profile = { unlockedContentIds: [PLAYER_CONTENT_ID, ROOM_CONTENT_ID], completedLevelIds: [], sessionsStarted: 0 };
                 this.pendingResume = null;
                 if (lab === 'SettingsLab') { this.subpage = 'none'; this.menu.open(); }
-                else this.request(lab === 'InputLab' ? 'localJoin' : lab === 'CameraLab' ? 'gameplay' : 'mainMenu');
+                else this.request((lab === 'InputLab' || lab === 'KeyboardGhostingLab') ? 'localJoin' : lab === 'CameraLab' ? 'gameplay' : 'mainMenu');
             }));
             choices.push(choice('runtime.back', () => { this.subpage = 'none'; }));
         } else if (this.lab === 'SaveLab') {
@@ -313,6 +365,11 @@ export class PrototypeBootstrap extends Component {
             if (this.lab) { title = this.t(`runtime.lab.${this.lab}`); choices.push(choice('runtime.back', () => this.leaveLab())); }
         } else if (state === 'localJoin') {
             title = this.t('runtime.join'); detail = this.t('runtime.joinHelp', { p1: this.t(this.inputManager.slots[0].connected ? 'state.ready' : 'state.waiting'), p2: this.t(this.inputManager.slots[1].connected ? 'state.ready' : 'state.waiting') });
+            if (this.lab === 'KeyboardGhostingLab') {
+                title = this.t('runtime.lab.KeyboardGhostingLab');
+                const keys = this.keyboard.diagnosticKeys;
+                detail = this.t('lab.ghosting', { keys: keys.held.join(' + ') || '-', peak: keys.peak });
+            }
             if (this.lab === 'InputLab') {
                 title = this.t('runtime.lab.InputLab');
                 detail += '\n' + this.inputManager.slots.map(slot => {
@@ -321,7 +378,8 @@ export class PrototypeBootstrap extends Component {
                 }).join(' | ');
             }
             choices = [choice('runtime.start', () => { if (this.inputManager.bothReady) this.request('gameplay'); else this.message = this.t('runtime.needPlayers'); }), settings,
-                choice('runtime.back', () => this.lab ? this.leaveLab() : this.request('mainMenu'))];
+                choice('runtime.back', () => this.lab ? this.leaveLab() : this.request('mainMenu')),
+                choice('runtime.leaveP1', () => this.inputManager.leave(1)), choice('runtime.leaveP2', () => this.inputManager.leave(2))];
         } else if (state === 'gameplay' && this.challenge?.completed && !this.services.pause.reasons.includes('manual')) {
             id = 'completed'; title = this.t('coop.success'); detail = this.t('coop.successDetail');
             choices = [choice('coop.retry', () => this.restart()), choice('runtime.main', () => this.returnToMain()), settings];
@@ -339,16 +397,15 @@ export class PrototypeBootstrap extends Component {
     }
     private challengeActors(): CoopActor[] {
         return this.players.map(p => ({ playerId: p.playerId, x: p.node.position.x, y: p.node.position.y,
-            interact: this.inputManager.slots[p.playerId - 1].isInteractPressed() }));
+            interact: this.inputManager.slots[p.playerId - 1].presence.state === 'Active' && !p.actor.tags.has('state.disabled')
+                && this.inputManager.slots[p.playerId - 1].isInteractPressed() }));
     }
     private challengeHints(): { title: string; help: string } {
-        const c = this.challenge!;
-        const help = this.challengeActors().map(p => {
-            const id = c.gateLatched ? 'coop.toExit' : c.platePlayer === p.playerId ? 'coop.keepPlate'
-                : c.nearTerminal(p) ? (c.platePlayer ? 'coop.useTerminal' : 'coop.needPartner') : 'coop.findRole';
-            return this.t(id, { player: p.playerId, key: this.services.glyphs.get('interact', p.playerId) });
-        }).join('\n');
-        return { title: this.t(c.gateLatched ? 'coop.goalExit' : 'coop.goalRelay'), help };
+        const model = coopViewModel(this.challenge!, this.challengeActors(), this.separationWarning);
+        return { title: this.t(model.objectiveId), help: model.players.map(p => this.t(p.promptId,
+            { player: p.playerId, key: this.services.glyphs.get('interact', p.playerId,
+                this.inputManager.slots[p.playerId - 1].deviceId?.startsWith('keyboard:') ? 'keyboard' : 'gamepad') })).join('\n')
+            + model.notifications.map(id => '\n' + this.t(id)).join('') };
     }
     private registerCommands(): void {
         this.console.register('reload_scene', () => { this.restart(); return 'requested'; });

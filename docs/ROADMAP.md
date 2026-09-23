@@ -1,54 +1,22 @@
-# 路线图
+# 路线图（以需求文档 v4 为准）
 
-## v0.1 Local Co-op Foundation
+历史源码版本与里程碑验收分开。当前源码 **0.5.0-dev**；此前实机 Gate 未完成，不能据版本号推断已经发布或验收。
 
-Task 0–7 的工程、输入、共用玩家、独立移动、加入、共享镜头、热插拔和房间代码已存在。v0.1 首轮按用户要求未运行；本轮自动回归覆盖了部分输入、热插拔逻辑和碰撞，原始实机 Gate 仍未完成。
-
-## v0.2 Core Services & Settings Foundation
-
-本轮依照新版文档推进开发，版本为 0.2.0-dev，不把尚未完成的 v0.1 PASS 前置条件视为通过。
-
-| 任务 | 当前实现 | 验证边界 |
+| 阶段 | 目标 | 当前状态 |
 | --- | --- | --- |
-| S0 Core Services Audit | CORE_SERVICES / SETTINGS_DESIGN 及职责调整 | 文档与代码同步 |
-| S1 Registry / Store | 四种定义类型、默认值、运行快照和工作副本 | 自动测试通过 |
-| S2 Persistence / Migration | 独立存储 key、schema 2、v1 迁移、校验和恢复 | 逻辑测试通过；原生存储待测 |
-| S3 Platform Capabilities | 菜单能力过滤，未实现能力隐藏 | 逻辑测试通过 |
-| S4 Audio Service | Master / Music / SFX / UI，音源注册与焦点静音 | 混音逻辑通过；实音频待测 |
-| S5 Display Foundation | 30/60 目标帧率，危险设置确认框架 | 显示确认逻辑通过；原生全屏等不开放 |
-| S6 Control Settings | 玩家槽位绑定、冲突处理、死区、恢复默认 | 逻辑与键盘事件桥接测试通过；设备待测 |
-| S7 Accessibility | UI 缩放、减少闪烁、镜头跟随强度；字幕 schema 隐藏 | 逻辑通过；视觉待测 |
-| S8 Settings Menu | 数据驱动分类、分页、应用 / 取消 / 重置 / 提示 / 确认 | 类型检查通过；引擎交互待测 |
-| S9 Localization | zh-CN 字符串 ID 和替换参数 | 定义文案覆盖测试通过 |
-| S10 Pause / Focus | 集中暂停原因，失焦暂停与静音分开 | 服务逻辑通过；原生焦点待测 |
-| S11 Diagnostics | 开发版 FPS / 输入 / 设备 / 镜头 / 设置状态 | 开关逻辑通过；实际渲染待测 |
-| S12 Gate | 30 项测试、官方类型检查、语法检查已执行 | Windows / Creator Gate 未完成，不创建 Tag |
+| v0.1 Local Co-op Foundation | 双人独立输入、共享角色和相机、热插拔 | 代码与无头回归已有；Windows／设备待验收 |
+| v0.2 Core Services & Settings | 设置事务、音频、暂停、文案与平台能力 | 代码与无头回归已有；实际输出待验收 |
+| v0.3 Runtime & Content Foundation | 场景流程、存档、资产、内容、时间随机 | 代码与无头回归已有；引擎生命周期待验收 |
+| v0.4 Local Co-op Robustness | 玩家身份、交互竞争、空间策略、安全出生、菜单归属 | 本轮补齐最小实现并接入接力实验；实机未验收 |
+| v0.5 Universal Gameplay Kernel | Actor／State／Action／Interaction／Relation／Tags／Trigger／Feedback | 本轮补齐合同与真实调用；最后一层强制通用基础 |
+| Marketable Prototype Gate | 10–20 分钟灰盒，观察沟通、等待、失败与再玩 | NOT RUN；当前接力关仅为候选 A |
+| Game Direction Lock | 基于原型证据确定产品方向 | 未开始 |
+| Gameplay Packs | 只选择当前方向需要的专业模块 | 未开始；不自动加入战斗或剧情 |
+| Vertical Slice | 完整产品流程及已启用 Pack 验证 | 未开始 |
+| Foundation Lock | 停止扩框架，正式内容生产 | 未通过 |
 
-下一步优先：按 VALIDATION_V0.2.md 完成 Creator 首次导入、UI 交互、四种设备组合、原生保存、音频与 Windows 构建；修复后记录真实 Gate 结果，再考虑发布。
+下一步应围绕现有接力实验和新的玩法假设制作可比较的灰盒内容；用户恢复运行授权后补基础 Gate 并实际试玩，得出 KEEP / ITERATE / KILL。不好玩先改玩法，不用加通用系统替代反馈。
 
-之后顺序调整为：v0.3 Interaction Sandbox → v0.4 Gameplay Prototype Experiments → 决定具体类型。移动 / 小游戏平台与网络仍后置。
+当前不做自研联网、完整 Ability／RPG Stats、Narrative Graph、Quest Editor、经济／合成／背包、Mod／Workshop、DLC 管理或完整 Replay。角色、关卡、主题资源与 UI 的生产配置待 Direction Lock 后按实际内容需求建设。
 
-## v0.3 Runtime & Content Foundation — 当前 0.3.0-dev
-
-| 任务 | 实现 | 验证状态 |
-| --- | --- | --- |
-| R0 Audit | RUNTIME_DESIGN / ARCHITECTURE | 已记录 |
-| R1–R2 SceneFlow / Loading | 应用状态、切换锁、prepare / activate / dispose、进度与失败恢复 | 逻辑自动测试；实际 UI 待验收 |
-| R3 Save / Profile | DTO、校验、迁移、备份与恢复、独立命名空间 | 逻辑自动测试；原生存储待验收 |
-| R4–R5 Content / Asset | 角色关卡稳定 ID、内容校验、共享资产作用域 | 逻辑自动测试；Cocos 引用生命周期待验收 |
-| R6 Navigation | 主菜单 / 加入 / 设置 / 暂停、模态优先级、Glyph | 导航合同自动测试；真实手柄待验收 |
-| R7 Time / Random | 暂停时间域、时间倍率、seed / state / shuffle | 自动测试 |
-| R8 Feedback | UI 脉冲、表现分离、Camera / Rumble hook | 合同自动测试；真实能力未开放 |
-| R9 Variants / Flags | 三变体、Release 禁用实验和命令、场景白名单 | 自动测试 |
-| R10 Labs | 四个实际 Lab 场景、独立实验存档 | 配置自动检查；场景实机待验收 |
-| R11 Logging / Build ID | 分类日志、上限、版本与提交标记 | 自动测试 |
-| R12 Gate | 自动回归完成 | Windows Build / 实机 NOT RUN，无发布 Tag |
-
-之后依 v3 路线推进 v0.4 Interaction Sandbox → v0.5 Gameplay Experiments → Game Direction Lock。先补原生 / 控制器 Gate，再确定具体互动实验；不默认进入战斗或联网系统。
-
-
-## 本轮：v0.4.0-dev 协作实验 01
-
-已完成一页游戏定义、守门与接力挑战、语义交互提示、终端检查点、共同撤离结果、重试、schema 3 与旧档迁移、11 项专项测试。第一阶段 v0.3.1 的实机检查因用户确认未安装 Creator 且暂不运行游戏而暂缓，未视为通过。
-
-下一步：用户恢复运行授权后补基础 Gate，并让至少 3 对玩家试玩，按 GAME_DEFINITION 中的标准判断是否保留机关合作方向。尚未制作第二、第三个挑战，未锁定正式剧情或全游戏内容量。
+详细映射：[v4 差量](PLAN_DELTA_V4.md) · [合作健壮性](COOP_ROBUSTNESS.md) · [玩法内核](GAMEPLAY_KERNEL.md) · [Prototype Gate](PROTOTYPE_GATE.md) · [本轮验证](VALIDATION_PLAN_V4.md)。旧验证记录保留为历史证据。

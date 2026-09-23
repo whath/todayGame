@@ -1,14 +1,15 @@
 {
   "name": "todaygame",
-  "version": "0.4.0-dev",
+  "version": "0.5.0-dev",
   "private": true,
-  "description": "DuoGame — first cooperative relay challenge",
+  "description": "DuoGame — co-op robustness and universal gameplay kernel",
   "scripts": {
     "test": "node tools/run-tests.cjs",
     "typecheck:core": "tsc -p tsconfig.core.json --noEmit",
     "typecheck:engine": "tsc -p tsconfig.engine.json",
     "check:syntax": "node tools/check-syntax.cjs",
-    "prepare:build": "node tools/prepare-build.cjs"
+    "prepare:build": "node tools/prepare-build.cjs",
+    "validate:content": "tsc -p tsconfig.core.json && node tools/validate-content.cjs"
   },
   "author": "whath <1024721855@qq.com>",
   "creator": {

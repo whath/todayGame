@@ -14,7 +14,7 @@ export class RuntimeScreen {
     private model: RuntimeScreenModel | null = null;
     private signature = '';
     private pulse = 0;
-    public constructor(private readonly camera: Camera) {
+    public constructor(private readonly camera: Camera, private readonly allowPointer = () => true) {
         this.root.parent = camera.node; this.root.layer = Layers.Enum.UI_2D; this.root.setPosition(0, 0, -400);
         this.root.addComponent(RenderRoot2D);
         this.content.parent = this.root; this.content.layer = Layers.Enum.UI_2D;
@@ -49,7 +49,7 @@ export class RuntimeScreen {
             const node = this.box(this.content, -475, 82 - index * 43, 950, 36,
                 index === this.selected ? new Color(50, this.pulse > 0 ? 120 : 99, 148) : new Color(36, 53, 76));
             this.label(node, choice.text, 14, 30, 910, 28, 20);
-            node.on(Node.EventType.TOUCH_END, () => { if (this.content.active && this.model?.id === model.id) { this.selected = index; this.model.choices[index]?.run(); } });
+            node.on(Node.EventType.TOUCH_END, () => { if (this.allowPointer() && this.content.active && this.model?.id === model.id) { this.selected = index; this.model.choices[index]?.run(); } });
         });
         this.label(this.content, model.footer, -510, -284, 1020, 30, 15);
     }

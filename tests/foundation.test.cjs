@@ -282,3 +282,9 @@ test('changed player binding reaches the existing device without changing owners
     f.adapter.onDown({ keyCode: f.codes.KEY_W }); f.frame();
     assert.equal(f.manager.slots[0].getMoveVector().y, 0);
 });
+
+test('keyboard ghosting inspector reports observed held keys only and tracks peak without claiming hardware success',()=>{
+ const f=keyboardFixture();f.adapter.onDown({keyCode:f.codes.KEY_W});f.adapter.onDown({keyCode:f.codes.KEY_F});f.adapter.onDown({keyCode:f.codes.ARROW_UP});
+ assert.equal(f.adapter.diagnosticKeys.held.length,3);assert.equal(f.adapter.diagnosticKeys.peak,3);
+ f.adapter.onUp({keyCode:f.codes.KEY_W});assert.equal(f.adapter.diagnosticKeys.held.length,2);assert.equal(f.adapter.diagnosticKeys.peak,3);
+});

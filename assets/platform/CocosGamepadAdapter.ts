@@ -10,7 +10,7 @@ interface Connection { source: CocosPad; live: boolean; id: string }
 export class CocosGamepadAdapter {
     private readonly connections = new Map<number, Connection>();
     private generation = 0;
-    private previousMenu: MenuInput = {};
+    private readonly previousMenu = new Map<string, MenuInput>();
     public constructor(private readonly register: (device: GamepadInputDevice) => void,
         private readonly deadzone: (deviceId: string) => number = () => 0.2) {}
 
@@ -23,13 +23,14 @@ export class CocosGamepadAdapter {
         input.off(Input.EventType.GAMEPAD_INPUT, this.onPad, this);
         this.connections.forEach(connection => { connection.live = false; });
         this.connections.clear();
-        this.previousMenu = {};
+        this.previousMenu.clear();
     }
     private onPad(event: EventGamepad): void {
         const pad = event.gamepad;
         const previous = this.connections.get(pad.deviceId);
         if (!pad.connected) {
             if (previous) previous.live = false;
+            if (previous) this.previousMenu.delete(previous.id);
             this.connections.delete(pad.deviceId);
             return;
         }
@@ -43,10 +44,12 @@ export class CocosGamepadAdapter {
             () => connection.live && connection.source.connected,
         ));
     }
-    public menuInput(): MenuInput {
-        const held: MenuInput = {};
-        this.connections.forEach(({ source: pad, live }) => {
+    public get connectedIds(): readonly string[] { return [...this.connections.values()].filter(c => c.live && c.source.connected).map(c => c.id); }
+    public menuInputs(): { deviceId: string; input: MenuInput }[] {
+        const frames: { deviceId: string; input: MenuInput }[] = [];
+        this.connections.forEach(({ source: pad, live, id }) => {
             if (!live || !pad.connected) return;
+            const held: MenuInput = {};
             const dpad = pad.dpad.getValue();
             const stick = pad.leftStick.getValue();
             held.up ||= dpad.y > 0.5 || stick.y > 0.5;
@@ -58,12 +61,12 @@ export class CocosGamepadAdapter {
             held.tab ||= pad.buttonR1.getValue() > 0.5;
             held.previousTab ||= pad.buttonL1.getValue() > 0.5;
             held.settings ||= pad.buttonOptions.getValue() > 0.5 || pad.buttonStart.getValue() > 0.5;
+            const previous = this.previousMenu.get(id) ?? {};
+            const edge: MenuInput = {};
+            for (const key of ['up', 'down', 'left', 'right', 'accept', 'back', 'tab', 'previousTab', 'settings'] as const) edge[key] = held[key] && !previous[key];
+            edge.pause = edge.settings; this.previousMenu.set(id, held); frames.push({ deviceId: id, input: edge });
         });
-        const edge: MenuInput = {};
-        for (const key of ['up', 'down', 'left', 'right', 'accept', 'back', 'tab', 'previousTab', 'settings'] as const) edge[key] = held[key] && !this.previousMenu[key];
-        edge.pause = edge.settings;
-        this.previousMenu = held;
-        return edge;
+        return frames;
     }
     private read(connection: Connection): RawInput {
         if (!connection.live || !connection.source.connected) return EMPTY_RAW;

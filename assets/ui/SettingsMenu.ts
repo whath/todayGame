@@ -21,7 +21,7 @@ export class SettingsMenu {
 
     public constructor(private readonly camera: Camera, private readonly settings: SettingsService,
         private readonly locale: LocalizationService, private readonly onOpenChanged: (open: boolean) => void,
-        private readonly returnToLobby: () => void) {
+        private readonly returnToLobby: () => void, private readonly allowPointer = () => true) {
         this.root.parent = camera.node;
         this.root.layer = Layers.Enum.UI_2D;
         this.root.setPosition(0, 0, -300);
@@ -31,6 +31,7 @@ export class SettingsMenu {
         this.root.active = false;
     }
     public get isOpen(): boolean { return this.root.active; }
+    public get capturingBinding(): boolean { return this.capture !== null; }
     public open(): void {
         this.settings.begin();
         this.root.active = true;
@@ -228,6 +229,6 @@ export class SettingsMenu {
     private button(parent: Node, text: string, x: number, y: number, width: number, selected: boolean, action: () => void): void {
         const node = this.box(parent, x, y, width, 34, selected ? new Color(50, 99, 148) : new Color(36, 53, 76));
         this.label(node, text, 9, 28, width - 18, 27, 17);
-        node.on(Node.EventType.TOUCH_END, action);
+        node.on(Node.EventType.TOUCH_END, () => { if (this.isOpen && this.allowPointer()) action(); });
     }
 }

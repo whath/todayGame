@@ -11,6 +11,7 @@ export class SharedCamera extends Component {
     private camera!: Camera;
     private targets: readonly Node[] = [];
     private bounds!: Box;
+    public offscreen = false;
 
     public initialize(camera: Camera, targets: readonly Node[], bounds: Box): void {
         this.camera = camera;
@@ -46,5 +47,6 @@ export class SharedCamera extends Component {
         zoom = Math.max(zoom, Math.min(this.maxZoom, safetyFit));
         this.camera.orthoHeight = zoom;
         this.node.setWorldPosition(nextX, nextY, current.z);
+        this.offscreen = [a, b].some(p => Math.abs(p.x - nextX) + 20 > zoom * aspect || Math.abs(p.y - nextY) + 20 > zoom);
     }
 }

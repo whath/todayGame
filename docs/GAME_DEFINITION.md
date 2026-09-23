@@ -1,5 +1,7 @@
 # 游戏定义 — 合作实验方向 v0.1
 
+路线以需求 v4 和 ROADMAP 为准：完成最小通用内核后先做 Prototype Gate，Direction Lock 后才选择专业 Gameplay Packs，Vertical Slice 后才 Foundation Lock。
+
 本页是当前实验的工作假设，后续由双人试玩决定保留或修改，尚未确定最终题材与商业范围。
 
 **一句话体验：** 两名搭档进入失去供电的设施，通过互相守门、恢复机关和接应，一起抵达出口。

@@ -73,3 +73,17 @@
 交付 GAME_DEFINITION 一页定义与首个灰盒挑战：踏板、门、终端、双人出口、动态碰撞、防夹、分工提示、完成菜单和重试。新游戏默认新关卡；Labs 和旧档继续使用原房间。终端／通关自动保存，schema 3 记录机关进度，v1/v2 迁移及原文备份继续有效。
 
 验证：68 项自动测试、官方 Cocos 类型检查、核心编译和 62 个脚本语法转译通过，包含两种玩家分工的完整碰撞路径模拟。用户确认未安装 Creator 并要求暂不运行游戏，未启动游戏或构建，未填写实际试玩结果。下一步是恢复实机 Gate 与外部双人试玩，再决定第二个挑战。
+
+
+## 需求 v4 差量补全 — 0.5.0-dev
+
+Goal：对比新旧需求并补全 Co-op Robustness 和 Universal Gameplay Kernel。
+Design Discussion：保留接力候选，底层最小化，专业 Pack 与生产配置后置。
+Decision：按新路线收敛通用基础；当前关卡选择 warning + off，菜单按打开来源拥有。
+Codex Task：对照 PLAN_DELTA_V4 的逐项差量落地与验证。
+Implementation：Presence、Spawn、空间／碰撞策略、仲裁／claim、Actor／Action／Trigger、HUD 模型、目标反馈、独立菜单输入、GhostingLab 和内容检查。
+Problems：原多手柄输入会合并，模态无法辨识操作来源；碰撞仅看最终位置会漏掉同帧交换。
+Root Cause：输入丢失来源、缺少相对运动扫掠。
+Result：独立输入／owner／断线回退与扫掠策略接入；88 项测试、官方类型检查、68 脚本语法及 3 内容／91 UUID 校验通过。游戏／Windows／真实硬件均 NOT RUN。
+Footage Markers：NOT RECORDED。
+Next：用户恢复运行授权后补实机 Gate，扩展可比较的灰盒玩法并记录 Prototype Gate，不继续无证据扩框架。

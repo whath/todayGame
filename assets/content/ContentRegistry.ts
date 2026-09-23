@@ -1,6 +1,7 @@
 import { Box } from '../core/CollisionWorld';
 import { MoveVector } from '../core/InputTypes';
 import { CoopDefinition, overlaps } from '../core/CoopChallenge';
+import { PlayerCollisionPolicy, SeparationPolicy } from '../core/CoopPolicies';
 export type ContentId = string;
 interface ContentBase { readonly id: ContentId; readonly nameId: string; readonly dependencies: readonly ContentId[] }
 export interface CharacterDefinition extends ContentBase {
@@ -10,6 +11,8 @@ export interface LevelDefinition extends ContentBase {
     readonly kind: 'level'; readonly characterId: ContentId; readonly bounds: Box;
     readonly obstacles: readonly Box[]; readonly spawns: readonly MoveVector[];
     readonly coop?: CoopDefinition;
+    readonly playerCollision?: PlayerCollisionPolicy;
+    readonly separation?: SeparationPolicy;
 }
 export type ContentDefinition = CharacterDefinition | LevelDefinition;
 function freeze<T>(value: T): T {
@@ -43,6 +46,9 @@ export class ContentRegistry {
                 if (!Number.isFinite(d.speed) || d.speed <= 0 || d.speed > 1000 || !Number.isFinite(d.halfSize) || d.halfSize <= 0 || d.halfSize > 100) throw new Error(`Invalid character range: ${id}`);
             } else {
                 const character = this.character(d.characterId);
+                if (d.playerCollision && !['off', 'soft', 'solid'].includes(d.playerCollision)) throw Error(`Invalid player collision: ${id}`);
+                if (d.separation && (!['warning', 'softTether', 'hardTether', 'blockProgress', 'autoRegroup', 'teleport'].includes(d.separation.mode)
+                    || !Number.isFinite(d.separation.maximumDistance) || d.separation.maximumDistance <= 0)) throw Error(`Invalid separation: ${id}`);
                 if (!d.dependencies.includes(d.characterId)) throw new Error(`Missing declared character dependency: ${id}`);
                 for (const box of [d.bounds, ...d.obstacles]) {
                     if (![box.x, box.y, box.width, box.height].every(Number.isFinite) || box.width <= 0 || box.height <= 0) throw new Error(`Invalid box: ${id}`);

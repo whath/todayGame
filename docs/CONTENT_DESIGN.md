@@ -10,3 +10,6 @@ CocosAssetBackend 对场景序列化引用的 Prefab 使用 addRef / decRef 管�
 
 
 新增 `level.coop.relay_01`，LevelDefinition 可选 coop 定义踏板、动态门、终端半径和双人出口。Registry 检查区域边界、交互半径、终端可通行与出生点不占门。静态墙体保持在 obstacles，门由 CoopChallenge 按状态加入碰撞；新增同规则布局只需注册关卡数据。
+
+
+LevelDefinition 现可选择 playerCollision 与 separation，当前接力明确 off + warning，其他策略不默认施加。pnpm validate:content 编译纯逻辑后检查内容定义、文案、资源文件和 .meta UUID 及场景／Prefab 引用；不调用 Creator。正式 Character 动作／动画主题和 Mission／Dialogue 制作工具按 v4 进入生产阶段后再补，避免虚构资源。

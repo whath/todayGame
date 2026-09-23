@@ -192,7 +192,7 @@ test('release and playtest configs exclude all actual lab scenes and replace uns
     const { buildConfig } = require('../tools/build-config.cjs');
     for (const variant of ['release','playtest']) { const config = buildConfig(variant, undefined, { scenes:[{url:'db://assets/labs/SaveLab.scene'}],debug:true });
         assert.equal(config.scenes.length,1); assert.equal(config.scenes[0].url,'db://assets/scenes/Prototype.scene'); assert.equal(config.debug,false); }
-    const dev = buildConfig('development'); assert.equal(dev.scenes.length,5);
+    const dev = buildConfig('development'); assert.equal(dev.scenes.length,6);
     for(const scene of dev.scenes.slice(1)) {
         const data = JSON.parse(fs.readFileSync(scene.url.slice(5),'utf8')); assert.ok(data[3].lab.endsWith('Lab')); assert.equal(data[1]._id,scene.uuid);
     }

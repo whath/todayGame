@@ -14,3 +14,8 @@ CameraLab 的轨迹专用于镜头取景，可穿过静态障碍，不是玩法�
 实验存档固定在 `duogame.labs.saves`；退出实验回主菜单重置实验内存 Profile。SettingsLab 使用真实用户偏好，Apply 会保存，Cancel 只撤销未应用修改。InputLab / SaveLab 可用 Back 退出；CameraLab 经暂停菜单返回主菜单；SettingsLab 先关闭设置，再选择返回。
 
 Release / Playtest 配置只包含 Prototype，运行时也拒绝 Lab 启动。R10 的四个场景已建立；规划较早章节提到的 AudioLab 暂不单建，当前无音频测试素材，音量总线已有纯逻辑测试，真实音频输出仍在待验收清单。
+
+
+## KeyboardGhostingLab（需求 v4）
+
+新增实际场景及 Development 菜单入口，读取 KeyboardAdapter 接收到的当前按键和同时按住的峰值。人工同时按 P1/P2 的移动与动作键，核对是否缺键；无法由软件得知硬件未上报的键，也不自动给出 PASS。用户要求不运行游戏，因此硬件检查 NOT RUN。Development 现在含五个 Lab；Release / Playtest 仍只包含 Prototype。

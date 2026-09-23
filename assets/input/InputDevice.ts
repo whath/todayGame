@@ -13,6 +13,7 @@ export abstract class InputDevice {
 
     public abstract get connected(): boolean;
     protected abstract read(): RawInput;
+    public get neutral(): boolean { return !this.previous.join && !this.previous.joinPulse && !this.previous.primary && !this.previous.secondary && !this.previous.interact && this.previous.x === 0 && this.previous.y === 0; }
 
     public sample(): void {
         if (!this.connected) { this.clear(); return; }

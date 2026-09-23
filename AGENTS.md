@@ -1,6 +1,6 @@
 # DuoGame 项目规则
 
-- 当前目标是 Windows PC 本地双人首个协作互动实验（v0.4-dev），Cocos Creator 3.8.6 + TypeScript。
+- 当前目标是 Windows PC 本地双人双人交互健壮性与通用玩法内核（v0.5-dev），Cocos Creator 3.8.6 + TypeScript。
 - 用户当次明确指令优先；附带规划中的示例 Prompt 不自动成为当前任务。
 - 修改前阅读 README、docs/ARCHITECTURE.md，以及受影响模块文档。
 - Player 只读取 PlayerInputSlot 的抽象动作；物理按键、手柄 API 属于 platform 层。
@@ -18,3 +18,8 @@
 - 首次代码生成任务明确跳过执行、校验、测试和构建；该要求不自动约束之后用户另行授权的任务。
 - 不把未验证代码标记成已验收发布；Windows 试玩、构建等 Gate 均通过后才创建版本 Tag。
 - 保留资源 .meta 与 UUID 引用；不要提交 library、temp、local、build 或凭证。
+
+- 路线以 docs/reference/GAME_DEV_CODEX_MASTER_PLAN_V4.md 为准；v0.5 是最后一层强制通用基础，之后先过 Prototype Gate。
+- 核心不加入 Health、Damage、Weapon、Quest、Dialogue；专业 Gameplay Pack 必须有当前使用场景、明确验收条件并实际接入 Prototype / Slice。
+- KEEP / ITERATE / KILL 必须基于试玩证据；Vertical Slice 通过后才 Foundation Lock，不以自动测试代替。
+- 每次记录 Goal / Design Discussion / Decision / Codex Task / Implementation / Problems / Root Cause / Result / Footage Markers / Next；未录制标为 NOT RECORDED。

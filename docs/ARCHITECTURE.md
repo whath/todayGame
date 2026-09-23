@@ -48,3 +48,10 @@ Lab.scene 复用入口，仅序列化不同 lab 标识和独立 UUID。Release /
 ## v0.4 首个互动实验
 
 CoopLevel 数据接入 ContentRegistry；CoopChallenge 位于 core，读取玩家位置和槽位 interact 语义，计算踏板、门、终端与出口。Bootstrap 在移动前更新门碰撞、移动后解析机关；CoopPresentation 和 HUD 显示状态。完成或暂停时不推进游戏逻辑。保存 schema 3 加入 Session.coop，旧测试房间和共用 Player Prefab 保持。详见 COOP_CHALLENGE。
+
+
+## 需求 v4 差量
+
+PlayerInputSlot 另持有 PlayerPresence，身份不随设备连接消失。PlayerController 组合 Actor 与 ActionRunner，移动仍由原模块负责。CoopChallenge 使用 InteractionService／OwnershipService 和 TriggerRule；UI 提示来自纯 GameHUDViewModel。Bootstrap 将 Level 的空间／碰撞配置交给 resolvePairMotion，安全位置由 SpawnService 选取，Camera 只报告离屏。
+
+菜单输入不再合并多个设备：平台输出独立边沿，组装层解析稳定玩家来源，UINavigation 检查顶层 owner，指针走同一检查；断线释放菜单与个人交互 claim。按键捕获为 owner 主动开启的键盘键值输入例外。键鼠是共享来源，不承诺识别两人的物理身份。详见 COOP_ROBUSTNESS / GAMEPLAY_KERNEL。
