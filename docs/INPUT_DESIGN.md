@@ -52,3 +52,7 @@ KeyboardAdapter 保存本帧按键脉冲，即便快速按下并松开，Join �
 
 ## 3D 输入约定
 语义 Move 使用二维操纵平面，Player 适配器将其映射到 3D XZ 地面，+Y 语义前进对应世界 -Z；引擎 +Y 是高度。物理按键不进入 Actor，当前未实现 Network/Replay/AI 输入来源。
+
+## 赛车动作
+InputFrame 新增可选 steering / throttle / brake；旧 move 与动作边沿不变。InputDevice 在归一化 Move 前生成独立驾驶轴，因此键盘转向不削弱油门。键盘用已绑定 Move 方向；手柄平台适配器将 RT/LT 转成模拟油门/刹车。车辆仅经 PlayerInputSlot.getDrivingInput 消费，不接触平台。
+赛车选车使用 interact、准备使用 secondary；South 仍确认菜单，East 在赛车加入页不会同时触发返回。四种组合的逻辑测试通过，硬件测试 NOT RUN。

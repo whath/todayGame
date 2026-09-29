@@ -139,3 +139,15 @@ Root Cause：运行时 effectName 不是序列化资源依赖，Cocos 不保证�
 Result：96 项自动测试、官方类型、71 脚本语法及 3 内容/97 UUID 检查通过；浏览器 3D 显示、双键盘加入/短移动、重开、暂停/设置、保存返回/继续通过。完整通关、旧真实用户档、手柄和 Windows 构建 NOT RUN。无外部正式素材、无发布 Tag。
 Footage Markers：NOT RECORDED；截图 docs/evidence/v5-3d-preview.png。
 Next：完整 3D 接力回归与真实设备/Windows Gate，再对比玩法候选并以证据决定 KEEP/ITERATE/KILL。
+
+## 2026-09-29 — 多类别入口与赛车 R0
+- Goal：为长期多类别产品建立入口，并接入偏真实双人分屏赛车驾驶原型。
+- Design Discussion：用户选择偏真实/卡通/双人分屏/无 AI，并要求赛车长期保留和尽量不占前台。
+- Decision：类别元数据与公共服务分离；赛车纯规则独立 Pack，引擎适配独立目录；旧接力存档兼容保留。
+- Codex Task：类别页、加入选车准备、赛道配置、四轮悬挂与轮胎力、两车分屏、圈赛结算、后台回归。
+- Implementation：2 种车辆参数、1 条灰盒训练赛道；模拟油门刹车；120Hz 手动物理；有向顺序检查点与安全复位；暂停/设置/设备归属沿用底座。
+- Problems：手柄 East 与菜单返回语义重叠；准备状态可能随设备变化失效；单复位点可能被对方占据；新增零力断言区分 +0/-0。
+- Root Cause：选择页需要明确动作归属；ready 不能跨设备身份继承；使用同一路段内备用点且保持检查点顺序；JS 有符号零不影响力的模长。
+- Result：官方类型/纯编译、80 脚本、108 UUID 与 113 项测试通过；四类设备测试为逻辑注入，真实设备、驾驶手感、视觉、Windows 构建 NOT RUN。
+- Footage Markers：NOT RECORDED。没有前台试玩和新增外部素材。
+- Next：先实机验证稳定悬挂、坡道、碰撞、完整圈赛/复位及跨类别往返，再调驾驶手感与增加第二赛道；详见 VALIDATION_RACING_R0。

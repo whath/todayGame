@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { createPrototypeContent } = require('../temp/core-tests/content/PrototypeContent');
 const { LocalizationService } = require('../temp/core-tests/services/LocalizationService');
+const { validateRacingContent } = require('../temp/core-tests/packs/racing/RacingContent');
 const root = path.resolve(__dirname, '..');
 const metas = new Map();
 function walk(directory) {
@@ -19,6 +20,7 @@ function walk(directory) {
 walk(path.join(root, 'assets'));
 const content = createPrototypeContent(), locale = new LocalizationService();
 content.validate(id => id === 'prefab.player' && fs.existsSync(path.join(root, 'assets/player/Player.prefab')), id => locale.t(id) !== id);
+validateRacingContent(undefined, undefined, id => locale.t(id) !== id);
 function references(value) {
     if (!value || typeof value !== 'object') return;
     // Pinned Cocos 3.8.6 builtin-standard.effect; all project references remain strict.

@@ -1,4 +1,10 @@
-# 候选 A — 3D 合作接力实验
+# 当前产品：多类别本地双人游戏
+
+入口先选择类别。赛车是用户确定的长期主要类别：偏真实驾驶、本地双人分屏、卡通车辆与赛道、无 AI。当前执行 R0 驾驶验证，具体流程与边界见 [赛车定义](RACING_PROTOTYPE.md)，分层见 [类别结构](GAME_CATEGORIES.md)。其他类别不提前虚构需求。
+
+以下接力定义继续适用于 relay 类别，不再代表整个产品的唯一类型。
+
+## 接力类别 — 3D 合作接力实验
 
 路线以需求 v5 和 ROADMAP 为准：完成最小通用内核后先做 Prototype Gate，Direction Lock 后才选择专业 Gameplay Packs，Vertical Slice 后才 Foundation Lock。
 

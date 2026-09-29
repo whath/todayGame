@@ -5,6 +5,9 @@ export type DeviceKind = 'keyboard' | 'gamepad';
 
 export interface InputFrame {
     readonly move: MoveVector;
+    readonly steering?: number;
+    readonly throttle?: number;
+    readonly brake?: number;
     readonly primaryPressed: boolean;
     readonly secondaryPressed: boolean;
     readonly interactPressed: boolean;
@@ -22,6 +25,8 @@ export const EMPTY_INPUT: InputFrame = Object.freeze({
 export interface RawInput {
     readonly x: number;
     readonly y: number;
+    readonly throttle?: number;
+    readonly brake?: number;
     readonly primary: boolean;
     readonly secondary: boolean;
     readonly interact: boolean;

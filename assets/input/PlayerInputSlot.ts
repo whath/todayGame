@@ -12,6 +12,9 @@ export class PlayerInputSlot {
     public get assigned(): boolean { return this.device !== null; }
     public get frame(): InputFrame { return this.connected ? this.device!.frame : EMPTY_INPUT; }
     public getMoveVector(): MoveVector { return this.frame.move; }
+    public getDrivingInput(): { steering: number; throttle: number; brake: number } {
+        return { steering: this.frame.steering ?? this.frame.move.x, throttle: this.frame.throttle ?? Math.max(0, this.frame.move.y), brake: this.frame.brake ?? Math.max(0, -this.frame.move.y) };
+    }
     public isPrimaryPressed(): boolean { return this.frame.primaryPressed; }
     public isSecondaryPressed(): boolean { return this.frame.secondaryPressed; }
     public isInteractPressed(): boolean { return this.frame.interactPressed; }

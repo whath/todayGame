@@ -13,13 +13,16 @@ export abstract class InputDevice {
 
     public abstract get connected(): boolean;
     protected abstract read(): RawInput;
-    public get neutral(): boolean { return !this.previous.join && !this.previous.joinPulse && !this.previous.primary && !this.previous.secondary && !this.previous.interact && this.previous.x === 0 && this.previous.y === 0; }
+    public get neutral(): boolean { return !this.previous.join && !this.previous.joinPulse && !this.previous.primary && !this.previous.secondary && !this.previous.interact && this.previous.x === 0 && this.previous.y === 0 && !(this.previous.throttle ?? 0) && !(this.previous.brake ?? 0); }
 
     public sample(): void {
         if (!this.connected) { this.clear(); return; }
         const raw = this.read();
         this.frame = {
             move: normalizeMove(raw.x, raw.y),
+            steering: Math.max(-1, Math.min(1, raw.x)),
+            throttle: Math.max(0, Math.min(1, raw.throttle ?? raw.y)),
+            brake: Math.max(0, Math.min(1, raw.brake ?? -raw.y)),
             primaryPressed: raw.primary && !this.previous.primary,
             secondaryPressed: raw.secondary && !this.previous.secondary,
             interactPressed: raw.interact && !this.previous.interact,

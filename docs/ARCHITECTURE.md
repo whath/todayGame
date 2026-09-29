@@ -1,6 +1,6 @@
 # 架构
 
-`PrototypeBootstrap` 是 Cocos 组装入口，持有 GameServices、输入、SceneFlow、一个共享 3D 世界 Camera 与一个 2D UI Camera、HUD、RuntimeScreen 和 SettingsMenu。一个真实 Player Prefab 实例化两次；没有按玩家复制控制器。
+`PrototypeBootstrap` 是 Cocos 组装入口，持有 GameServices、输入、SceneFlow、接力共享 3D Camera 或赛车双分屏 Camera，以及一个共用 2D UI Camera、HUD、RuntimeScreen 和 SettingsMenu。一个真实 Player Prefab 实例化两次；没有按玩家复制控制器。
 
 ## 模块与依赖
 
@@ -38,9 +38,9 @@ Lab.scene 复用入口，仅序列化不同 lab 标识和独立 UUID。Release /
 
 ## 碰撞与相机
 
-保留静态 AABB 分轴扫掠、贴墙滑动、角色互相穿过。房间边界 / 障碍 / 出生点统一来自 LevelDefinition；未实现重力、旋转、推力、动态刚体。这些规则作用于 3D XZ 地面的逻辑脚印；需要动态物理时优先接 Cocos Physics3D。
+接力与测试房间保留静态 AABB 分轴扫掠、贴墙滑动、角色互相穿过。房间边界 / 障碍 / 出生点统一来自 LevelDefinition；未实现重力、旋转、推力、动态刚体。这些规则作用于 3D XZ 地面的逻辑脚印；需要动态物理时优先接 Cocos Physics3D。
 
-共享世界 Camera 在 3D XZ 地面上方倾斜取景，仅渲染 DEFAULT 层；CameraPolicy 由关卡选择 shared-group 或 fixed-room。UI Camera 固定正交，priority=1、DEPTH_ONLY、UI_2D，独立单 RenderRoot2D 管理 HUD → 运行菜单 → 设置，不参与玩家取景。共享屏幕不等于只允许一个 Camera 组件。
+共享世界 Camera 在 3D XZ 地面上方倾斜取景，仅渲染 DEFAULT 层；CameraPolicy 由关卡选择 shared-group 或 fixed-room。UI Camera 固定正交，priority=10、DEPTH_ONLY、UI_2D，独立单 RenderRoot2D 管理 HUD → 运行菜单 → 设置，不参与玩家取景。共享屏幕不等于只允许一个 Camera 组件。
 
 进度存档、实验存档与设置使用独立命名空间。没有通用服务定位器、全局事件总线、对象池、网络、Ability / Mod / Replay 系统。
 
@@ -60,3 +60,7 @@ PlayerInputSlot 另持有 PlayerPresence，身份不随设备连接消失。Play
 WorldCoordinates 在厘米平面数据与米制 XZ 世界之间转换，存档 schema 3 坐标不改含义。网格/材质由 GreyboxGeometry 拥有并释放，Greybox.mtl 是场景显式依赖，确保着色器预加载。PlayerPresentation 使用球体/方柱，HUD 投影语义标签，Player 不引用 Camera。
 
 Presence 通用状态为 Inactive，队伍不再由 Player 写死；接力 Level 明确 cooperative，测试房间 neutral。Competitive 要求目标提供胜者函数，Shared claim 可由多个 Actor 持有。空间规则文件为 MultiplayerPolicies，接力 HUD 为 packs/relay/RelayHUDViewModel。Level 与 Save 中 coop 是现有 Pack 的兼容接入字段，不是所有玩法的必需项。没有新增生产依赖或网络实现。
+## 长期多类别 / 赛车 R0
+入口改为类别选择，稳定 ID racing / relay 由 app/GameCategories 安装到纯 CategoryRegistry；SceneFlow 请求携带 categoryId 与类别自己的 contentId。公共输入、暂停、设置、时间不属于任何类别；车辆/赛道/圈赛位于 packs/racing，刚体与相机位于 gameplay/racing，详见 GAME_CATEGORIES。
+赛车使用同一个 RacingVehicle 工厂实例化 P1/P2，消费 PlayerInputSlot 的 steering/throttle/brake 与 interact；没有复用角色地面 AABB 来模拟车辆。Cocos PhysicsSystem 在应用入口统一手动步进，赛车按 gameDelta 驱动 120Hz 子步；暂停为零步。矩阵/自动模拟状态在入口销毁时恢复。赛车两台透视相机各占半屏，UI priority 10；接力继续使用共享正交相机。
+赛车当前不进入 SaveSnapshot schema 3，不展示中途保存/继续；接力存档兼容路径保留。后续类别采用独立内容和进度 schema，禁止把赛车字段堆进通用 Actor/Level。当前 Bootstrap 仍是两个类别的显式组装点，没有引入无使用场景的动态插件框架。

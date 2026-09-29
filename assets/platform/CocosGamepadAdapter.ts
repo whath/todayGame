@@ -85,6 +85,7 @@ export class CocosGamepadAdapter {
         return {
             x: useDpad ? dpad.x : move.x,
             y: useDpad ? dpad.y : move.y,
+            throttle: pad.buttonR2.getValue(), brake: pad.buttonL2.getValue(),
             primary, secondary, interact, join,
         };
     }

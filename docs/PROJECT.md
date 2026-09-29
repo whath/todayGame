@@ -1,13 +1,11 @@
-# 项目章程 — v5
+# 项目章程 — 多类别 / 赛车 R0
 
-权威路线：[v5 主文档](reference/GAME_DEV_CODEX_MASTER_PLAN_V5.md)。工作名 DuoGame，仓库 todayGame，源码维持 0.5.0-dev；规划版本 v5 不是发布版本。
+DuoGame，仓库 todayGame，Cocos Creator 3.8.6 + TypeScript，Windows PC，3D 世界。当前源码仍 0.5.0-dev，未通过 Windows/Prototype Gate，无发布 Tag。
 
-固定技术方向：Cocos Creator 3.8.6 + TypeScript、Windows PC、3D 世界、首发本地双人同屏；P1/P2 共用角色 Prefab，支持两套键盘、键盘/手柄与双手柄。共享一个游戏视角，2D UI 覆盖相机不构成分屏。
+用户最新指令优先于 v5 旧的最终类型未定/单共享视角限制：产品先选择游戏类别，赛车长期保留，后续还有其他类别。赛车方向已明确为偏真实驾驶、双人分屏、卡通画面、无 AI；接力原型作为独立类别保留共享视角和存档。其他类别待实际需求立项。
 
-最终 Genre、合作或竞争、线性叙事、视觉风格均未锁定。当前守门接力是合作候选 A，不代表产品已经选定解谜或故事方向。没有游戏账号、服务器、联机同步或商业化功能。
+公共服务负责语义输入、设备归属、设置、暂停、时间、资源与平台边界；类别拥有纯规则、内容、引擎适配与未来进度 schema。不得在通用 Player/Actor 中添加赛车专用状态。详见 GAME_CATEGORIES。
 
-本轮将原有平面规则投射到 3D XZ 地面：角色、地板、墙体、机关使用引擎网格和标准材质、方向光；UI 保留 2D。角色当前贴地行走，没有跳跃、重力、斜坡或动态刚体玩法。具体实现与边界见 [3D 迁移](MIGRATION_3D.md)。
+赛车 R0 接入两种车辆参数和一条灰盒训练赛道，动态刚体、悬挂、轮胎力与圈赛。本轮只做后台验证，没有前台试玩；代码完成不等于驾驶手感、物理稳定性或发布已验收，详见 VALIDATION_RACING_R0。
 
-v0.5 是最后一层强制通用基础；之后用不同类型灰盒收集证据，Prototype Gate → Direction Lock → 最小 Genre Packs → Vertical Slice → Foundation Lock。自动检查不代替双人试玩和 Windows 验收。
-
-外部资产来源策略为 Quaternius / Fab Free / itch.io Free，必须逐资源记录许可和技术检查。用户负责视觉选择和批准，Codex 负责技术接入。当前没有批准或导入任何外部正式资产。
+基础层继续遵循 v5，避免扩建无需求框架；Prototype / Slice 验收按类别具体方案推进。外部正式美术仍须用户批准并记录许可，当前无正式外部资产；不做服务器/联网/商业化系统。

@@ -1,4 +1,8 @@
-import { _decorator, Camera, Color, Component, DirectionalLight, instantiate, Layers, Material, Node, Prefab, RenderRoot2D, Vec3 } from 'cc';
+import { _decorator, Camera, Color, Component, DirectionalLight, instantiate, Layers, Material, Node, PhysicsSystem, Prefab, RenderRoot2D, Vec3 } from 'cc';
+import { createCategories } from '../app/GameCategories';
+import { RacingSetup } from '../packs/racing/RacingSetup';
+import { RacingWorld } from './racing/RacingWorld';
+import { RacingHUD } from '../ui/RacingHUD';
 import { toWorld } from '../core/WorldCoordinates';
 import { FixedRoomCameraPolicy, SharedGroupCameraPolicy } from '../core/CameraPolicy';
 import { GameServices } from '../app/GameServices';
@@ -37,6 +41,12 @@ export class PrototypeBootstrap extends Component {
     @property(Material) public greyboxMaterial: Material | null = null;
     @property public lab = '';
     private readonly services = new GameServices();
+    private readonly categories = createCategories();
+    private selectedCategory: string | null = null;
+    private readonly racingSetup = new RacingSetup();
+    private racing: RacingWorld | null = null;
+    private racingHUD!: RacingHUD;
+    private physicsRestore: (() => void) | null = null;
     private readonly inputManager = new InputManager();
     private readonly keyboard = new KeyboardAdapter(() => this.services.settings.runtime, id => this.inputManager.playerForDevice(id));
     private readonly gamepads = new CocosGamepadAdapter(device => this.inputManager.register(device), id => {
@@ -98,8 +108,17 @@ export class PrototypeBootstrap extends Component {
         cameraNode.addComponent(RenderRoot2D);
         this.camera = cameraNode.addComponent(Camera);
         this.camera.projection = Camera.ProjectionType.ORTHO; this.camera.orthoHeight = 360; this.camera.near = 1; this.camera.far = 2000;
-        this.camera.clearFlags = Camera.ClearFlag.DEPTH_ONLY; this.camera.priority = 1; this.camera.visibility = Layers.Enum.UI_2D;
+        this.camera.clearFlags = Camera.ClearFlag.DEPTH_ONLY; this.camera.priority = 10; this.camera.visibility = Layers.Enum.UI_2D;
         this.hud = new PrototypeHUD(this.camera, this.services);
+        this.racingHUD = new RacingHUD(this.camera, this.services.localization);
+        const physics = PhysicsSystem.instance;
+        if (physics) {
+            const auto = physics.autoSimulation;
+            const masks = [physics.collisionMatrix[1], physics.collisionMatrix[2], physics.collisionMatrix[4]];
+            physics.autoSimulation = false;
+            physics.collisionMatrix[1] = 7; physics.collisionMatrix[2] = 1; physics.collisionMatrix[4] = 1;
+            this.physicsRestore = () => { physics.autoSimulation = auto; [1, 2, 4].forEach((group, i) => { physics.collisionMatrix[group] = masks[i]; }); };
+        }
         this.screen = new RuntimeScreen(this.camera, this.allowPointer);
         try {
             if (!this.greyboxMaterial?.effectAsset) throw Error('Missing Greybox material scene dependency');
@@ -135,12 +154,26 @@ export class PrototypeBootstrap extends Component {
         if (request.target !== 'gameplay') {
             progress(1);
             return { activate: () => {
+                this.racing = null; this.worldCamera.enabled = true; this.hud.setVisible(true);
                 this.players = []; this.activeSession = null; this.challenge = null; this.challengeView = null;
                 this.services.pause.clearManual(); this.services.pause.set('controller', false);
                 this.inputManager.releaseAll(); this.session.returnToLobby(this.inputManager);
                 this.camera.node.setPosition(0, 0, 1000); this.camera.orthoHeight = 360;
                 this.subpage = 'none'; this.pauseOwner = null;
             }, dispose: () => {} };
+        }
+        if (request.categoryId) this.categories.get(request.categoryId);
+        if (!this.lab && request.categoryId === 'racing') {
+            if (!this.inputManager.bothReady) throw Error(this.t('runtime.needPlayers'));
+            if (PhysicsSystem.PHYSICS_NONE || PhysicsSystem.PHYSICS_BUILTIN) throw Error(this.t('racing.physicsRequired'));
+            const world = new RacingWorld(this.node, this.inputManager.slots, this.racingSetup.selection);
+            progress(1);
+            return { activate: () => {
+                world.activate(); this.racing = world; this.players = []; this.activeSession = null;
+                this.challenge = null; this.challengeView = null; this.pendingResume = null;
+                this.worldCamera.enabled = false; this.hud.setVisible(false);
+                this.services.pause.clearManual(); this.services.time.restore(0); this.subpage = 'none';
+            }, dispose: () => { world.dispose(); if (this.racing === world) this.racing = null; } };
         }
         const level = this.services.content.level(request.contentId ?? ROOM_CONTENT_ID);
         const character = this.services.content.character(level.characterId);
@@ -174,6 +207,7 @@ export class PrototypeBootstrap extends Component {
             const challengeView = challenge ? new CoopPresentation(root, challenge) : null;
             progress(1);
             return { activate: () => {
+                this.racing = null; this.worldCamera.enabled = true; this.hud.setVisible(true);
                 this.players = players; this.room = room; this.activeSession = snapshot;
                 this.challenge = challenge; this.challengeView = challengeView; this.selectedLevel = level.id;
                 this.services.random.reset(snapshot.seed, snapshot.randomState); this.services.time.restore(snapshot.elapsedSeconds);
@@ -191,11 +225,12 @@ export class PrototypeBootstrap extends Component {
     private request(target: TransitionRequest['target']): void {
         if (this.flow.busy) return;
         this.message = '';
-        void this.flow.requestTransition({ target, contentId: this.pendingResume?.levelId ?? (this.lab ? ROOM_CONTENT_ID : this.selectedLevel) }).then(ok => {
+        void this.flow.requestTransition({ target, categoryId: this.lab ? 'relay' : this.selectedCategory ?? undefined, contentId: !this.lab && this.selectedCategory === 'racing' ? this.racingSetup.selection.trackId : this.pendingResume?.levelId ?? (this.lab ? ROOM_CONTENT_ID : this.selectedLevel) }).then(ok => {
             if (!ok && this.isValid) this.message = this.t('runtime.transitionFailed', { error: this.flow.loading.error });
         });
     }
     private loadForJoin(resume: boolean): void {
+        this.selectedCategory = 'relay';
         const loaded = this.saves.load('profile.default', 'slot1');
         if (resume && !loaded.snapshot?.session) {
             this.message = loaded.status === 'future' ? this.t('runtime.futureSave') : loaded.status === 'failed'
@@ -232,10 +267,10 @@ export class PrototypeBootstrap extends Component {
     private returnToMain(): void {
         if (this.lab) { this.leaveLab(); return; }
         if (this.players.length && !this.save('return-to-menu')) return;
-        this.pendingResume = null; this.request('mainMenu');
+        this.pendingResume = null; this.selectedCategory = null; this.request('mainMenu');
     }
     private leaveLab(): void {
-        this.lab = ''; this.pendingResume = null; this.selectedLevel = COOP_LEVEL_ID;
+        this.lab = ''; this.selectedCategory = null; this.pendingResume = null; this.selectedLevel = COOP_LEVEL_ID;
         this.profile = { unlockedContentIds: [PLAYER_CONTENT_ID, ROOM_CONTENT_ID], completedLevelIds: [], sessionsStarted: 0 };
         this.services.time.setScale(1); this.request('mainMenu');
     }
@@ -252,6 +287,7 @@ export class PrototypeBootstrap extends Component {
             if (this.subpage !== 'none') this.subpage = 'none';
             else if (this.lab) this.leaveLab();
             else if (state === 'localJoin') this.request('mainMenu');
+            else if (state === 'mainMenu') this.selectedCategory = null;
             return;
         }
         this.screen.handle(command);
@@ -282,9 +318,11 @@ export class PrototypeBootstrap extends Component {
         }
         const owner = this.services.navigation.owner;
         if (owner?.startsWith('gamepad:') && !this.gamepads.connectedIds.includes(owner)) this.services.navigation.releaseOwner(owner);
+        const racingSelectionAllowed = this.selectedCategory === 'racing' && !this.lab && this.flow.state.current === 'localJoin' && !this.menu.isOpen;
         const frames = [{ source: 'keyboard', input: keyboard }, ...pads.map(p => {
             const player = this.inputManager.playerForDevice(p.deviceId);
-            return { source: player ? 'player.' + player : p.deviceId, input: p.input };
+            return { source: player ? 'player.' + player : p.deviceId,
+                input: racingSelectionAllowed ? { ...p.input, back: false } : p.input };
         })];
         const chosen = frames.find(f => this.services.navigation.accepts(f.source) && Object.values(f.input).some(v => v === true));
         const command: MenuInput = chosen?.input ?? {};
@@ -296,18 +334,35 @@ export class PrototypeBootstrap extends Component {
             this.services.navigation.dispatch(command, chosen.source);
             if (command.diagnostics) this.services.diagnostics.toggle();
         }
+        const previousDevices = this.inputManager.slots.map(slot => slot.connected ? slot.deviceId : null);
         this.inputManager.update(this.focused && this.flow.state.current === 'localJoin' && !this.menu.isOpen && !this.flow.busy);
         // Disconnected slots can be explicitly reclaimed during gameplay, but never in menus.
         if (this.flow.state.current === 'gameplay' && !this.menu.isOpen && !this.services.pause.reasons.includes('manual') && this.focused) {
             // Input was already sampled; joining is resolved from that same frame.
             this.inputManager.assignFromCurrentFrame();
         }
+        if (this.selectedCategory === 'racing' && this.flow.state.current === 'localJoin') {
+            this.inputManager.slots.forEach((slot, i) => {
+                this.racingSetup.syncDevice(i, slot.connected ? slot.deviceId : null);
+                if (racingSelectionAllowed && !this.menu.isOpen && this.focused && slot.connected && previousDevices[i] === slot.deviceId) {
+                    if (slot.isInteractPressed()) this.racingSetup.chooseCar(i);
+                    if (slot.isSecondaryPressed()) this.racingSetup.toggleReady(i);
+                }
+            });
+        }
         this.session.update(this.inputManager);
         this.services.pause.set('controller', this.flow.state.current === 'gameplay' && !this.inputManager.bothReady && this.lab !== 'CameraLab');
-        const paused = this.flow.state.current !== 'gameplay' || this.services.pause.paused || hadOverlay || this.challenge?.completed === true;
+        const paused = this.flow.state.current !== 'gameplay' || this.services.pause.paused || hadOverlay || this.challenge?.completed === true || this.racing?.race.finished === true;
         this.services.time.tick(dt, paused);
         if (command.reset && !paused && this.focused) { this.restart(); this.keyboard.endFrame(); return; }
         this.keyboard.endFrame();
+        this.racingHUD.update(this.racing, this.services.accessibility.uiScale,
+            this.services.pause.paused ? this.t('racing.paused') : '');
+        if (this.racing) {
+            this.racing.tick(this.services.time.gameDelta, this.services.accessibility.cameraSmoothing);
+            this.screen.update(this.screenModel(), this.services.accessibility.uiScale, this.services.time.uiDelta, !this.menu.isOpen);
+            this.menu.update(this.services.accessibility.uiScale); return;
+        }
         if (this.challenge && !paused) this.challenge.update(this.challengeActors(), false);
         const collision = this.challenge?.collision(this.room.bounds, this.room.obstacles) ?? this.room.collision;
         const before = this.players.map(p => p.groundPosition);
@@ -391,12 +446,30 @@ export class PrototypeBootstrap extends Component {
                 this.message = this.t('runtime.labResult', { status: loaded.status, schema: loaded.snapshot?.schemaVersion ?? '-', sessions: loaded.snapshot?.profile.sessionsStarted ?? 0 });
             }), settings, choice('runtime.back', () => this.leaveLab())];
         } else if (state === 'mainMenu') {
-            title = this.t('runtime.mainMenu'); detail = this.t('runtime.description');
-            choices = [choice('runtime.new', () => this.loadForJoin(false)), choice('runtime.continue', () => this.loadForJoin(true)), settings];
+            if (!this.selectedCategory && !this.lab) {
+                id = 'categories'; title = this.t('category.title'); detail = this.t('category.detail');
+                choices = this.categories.all.map(category => choice(category.titleId, () => { this.selectedCategory = category.id; }));
+                choices.push(settings);
+            } else if (this.selectedCategory === 'racing' && !this.lab) {
+                id = 'racing.frontend'; title = this.t('category.racing'); detail = this.t('category.racing.detail');
+                choices = [choice('racing.enter', () => { this.pendingResume = null; this.request('localJoin'); }), settings,
+                    choice('category.back', () => { this.selectedCategory = null; })];
+            } else {
+                id = 'relay.frontend'; title = this.t('category.relay'); detail = this.t('category.relay.detail');
+                choices = [choice('runtime.new', () => this.loadForJoin(false)), choice('runtime.continue', () => this.loadForJoin(true)), settings,
+                    choice('category.back', () => { this.selectedCategory = null; })];
+            }
             if (this.services.policy.labs) choices.push(choice('runtime.labs', () => { this.subpage = 'labs'; }));
             if (this.lab) { title = this.t(`runtime.lab.${this.lab}`); choices.push(choice('runtime.back', () => this.leaveLab())); }
         } else if (state === 'localJoin') {
             title = this.t('runtime.join'); detail = this.t('runtime.joinHelp', { p1: this.t(this.inputManager.slots[0].connected ? 'state.ready' : 'state.waiting'), p2: this.t(this.inputManager.slots[1].connected ? 'state.ready' : 'state.waiting') });
+            if (this.selectedCategory === 'racing' && !this.lab) {
+                id = 'racing.join'; title = this.t('racing.setup');
+                const selection = this.racingSetup.selection;
+                detail = this.t('racing.setupHelp') + '\n' + this.inputManager.slots.map((slot, i) => this.t('racing.playerSelection', {
+                    player: i + 1, car: this.t(selection.carIds[i]), state: this.t(!slot.connected ? 'state.waiting' : this.racingSetup.ready[i] ? 'racing.ready' : 'racing.choosing')
+                })).join('\n');
+            }
             if (this.lab === 'KeyboardGhostingLab') {
                 title = this.t('runtime.lab.KeyboardGhostingLab');
                 const keys = this.keyboard.diagnosticKeys;
@@ -409,9 +482,17 @@ export class PrototypeBootstrap extends Component {
                     return this.t('runtime.inputSample', { player: slot.playerId, device: slot.deviceId ?? '-', x: move.x.toFixed(2), y: move.y.toFixed(2) });
                 }).join(' | ');
             }
-            choices = [choice('runtime.start', () => { if (this.inputManager.bothReady) this.request('gameplay'); else this.message = this.t('runtime.needPlayers'); }), settings,
+            choices = [choice(this.selectedCategory === 'racing' && !this.lab ? 'racing.start' : 'runtime.start', () => { if (this.inputManager.bothReady && (this.selectedCategory !== 'racing' || !!this.lab || this.racingSetup.canStart)) this.request('gameplay'); else this.message = this.t(this.selectedCategory === 'racing' && !this.lab ? 'racing.needReady' : 'runtime.needPlayers'); }), settings,
                 choice('runtime.back', () => this.lab ? this.leaveLab() : this.request('mainMenu')),
                 choice('runtime.leaveP1', () => this.inputManager.leave(1)), choice('runtime.leaveP2', () => this.inputManager.leave(2))];
+            if (this.selectedCategory === 'racing' && !this.lab) choices.splice(1, 0, { text: this.t('racing.trackSelection', { track: this.t(this.racingSetup.selection.trackId) }),
+                run: () => { if (!this.flow.busy && !this.menu.isOpen) this.racingSetup.chooseTrack(); } });
+        } else if (state === 'gameplay' && this.racing?.race.finished && !this.services.pause.reasons.includes('manual')) {
+            id = 'racing.result'; title = this.t('racing.result');
+            detail = this.racing.race.order(this.racing.cars.map(car => car.node.worldPosition)).map((index, rank) => this.t('racing.resultPlayer', {
+                rank: rank + 1, player: index + 1, time: this.racing!.race.racers[index].finishedAt!.toFixed(2)
+            })).join('\n');
+            choices = [choice('runtime.restart', () => this.restart()), choice('racing.reselect', () => this.returnToJoin()), choice('category.back', () => this.returnToMain())];
         } else if (state === 'gameplay' && this.challenge?.completed && !this.services.pause.reasons.includes('manual')) {
             id = 'completed'; title = this.t('coop.success'); detail = this.t('coop.successDetail');
             choices = [choice('coop.retry', () => this.restart()), choice('runtime.main', () => this.returnToMain()), settings];
@@ -420,7 +501,9 @@ export class PrototypeBootstrap extends Component {
             detail = this.t('runtime.seed', { seed: this.services.random.seed, time: this.services.time.gameElapsed.toFixed(1) });
             choices = [choice('runtime.resume', () => this.services.pause.clearManual()), settings, choice('runtime.save', () => { this.save('manual'); }),
                 choice('runtime.restart', () => this.restart()), choice('runtime.main', () => this.returnToMain())];
-            if (this.services.policy.developerTools) choices.push(choice('runtime.tools', () => { this.subpage = 'tools'; }));
+            if (this.racing) choices = [choice('runtime.resume', () => this.services.pause.clearManual()), settings,
+                choice('runtime.restart', () => this.restart()), choice('racing.reselect', () => this.returnToJoin()), choice('category.back', () => this.returnToMain())];
+            if (!this.racing && this.services.policy.developerTools) choices.push(choice('runtime.tools', () => { this.subpage = 'tools'; }));
         }
         const build = this.services.build;
         return { id, title, detail: detail + (this.message ? `\n${this.message}` : ''), choices,
@@ -451,7 +534,7 @@ export class PrototypeBootstrap extends Component {
     protected onEnable(): void { if (this.ready) this.startAdapters(); }
     protected onDisable(): void { this.stopAdapters(); if (this.ready && this.menu.isOpen) this.menu.close(); }
     protected onDestroy(): void {
-        this.stopAdapters(); this.flow?.dispose(); this.feedback?.dispose(); this.audio?.dispose(); this.services.dispose(); this.inputManager.dispose();
+        this.stopAdapters(); this.flow?.dispose(); this.feedback?.dispose(); this.audio?.dispose(); this.services.dispose(); this.inputManager.dispose(); this.physicsRestore?.();
     }
     private startAdapters(): void { if (this.adaptersActive) return; this.adaptersActive = true; this.keyboard.start(); this.gamepads.start(); this.focus.start(); }
     private stopAdapters(): void { if (!this.adaptersActive) return; this.adaptersActive = false; this.focus.stop(); this.keyboard.stop(); this.gamepads.stop(); this.inputManager.clearFrames(); }

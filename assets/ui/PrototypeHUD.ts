@@ -25,6 +25,7 @@ export class PrototypeHUD {
         this.help = this.label('Controls', 14);
         this.debug = this.label('Development diagnostics', 16);
     }
+    public setVisible(visible: boolean): void { this.root.active = visible; }
     public trackWorld(camera: Camera, markers: readonly { text: string; point: Vec3 }[]): void {
         while (this.markers.length < markers.length) {
             const label = this.label('World marker', 17);

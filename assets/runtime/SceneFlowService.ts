@@ -1,7 +1,7 @@
 import { AssetScope, AssetService } from './AssetService';
 import { DomainEvent } from './DomainEvent';
 export type AppState = 'boot' | 'mainMenu' | 'localJoin' | 'loading' | 'gameplay';
-export interface TransitionRequest { readonly target: Exclude<AppState, 'boot' | 'loading'>; readonly contentId?: string }
+export interface TransitionRequest { readonly target: Exclude<AppState, 'boot' | 'loading'>; readonly contentId?: string; readonly categoryId?: string }
 export interface PreparedView { activate(): void; dispose(): void }
 export interface SceneFlowAdapter<T> {
     prepare(request: TransitionRequest, scope: AssetScope<T>, progress: (value: number) => void): Promise<PreparedView>;

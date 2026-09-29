@@ -16,3 +16,6 @@ LevelDefinition 现可选择 playerCollision 与 separation，当前接力明确
 
 ## v5 配置
 LevelDefinition 增加可选 relationship（cooperative/competitive/neutral）及 cameraPolicy（shared-group/fixed-room），Registry 验证枚举。接力显式 cooperative，测试房间 neutral。角色/机关世界坐标由 WorldCoordinates 转换；当前没有增加 Vehicle/Machine 等无使用场景的 Definition。
+
+## 赛车 R0
+新增有实际使用场景的 packs/racing/RacingContent：2 辆车和 1 条赛道的稳定 ID、物理参数、米制路径点、道路宽度、圈数。resolveRace 拒绝未知选择；validateRacingContent 校验 ID、文案、有限正参数和有效道路段，纳入 validate-content。它独立于旧 Character/Level，未来新增类别不需要扩充旧接力定义。
