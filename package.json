@@ -2,7 +2,7 @@
   "name": "todaygame",
   "version": "0.5.0-dev",
   "private": true,
-  "description": "DuoGame — co-op robustness and universal gameplay kernel",
+  "description": "DuoGame — 3D local multiplayer foundation and universal gameplay kernel",
   "scripts": {
     "test": "node tools/run-tests.cjs",
     "typecheck:core": "tsc -p tsconfig.core.json --noEmit",

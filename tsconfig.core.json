@@ -17,6 +17,7 @@
     "assets/services/**/*.ts",
     "assets/runtime/**/*.ts",
     "assets/content/**/*.ts",
+    "assets/packs/**/*.ts",
     "assets/save/**/*.ts"
   ]
 }

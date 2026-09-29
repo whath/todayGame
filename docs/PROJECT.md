@@ -1,17 +1,13 @@
-# 项目章程
+# 项目章程 — v5
 
-工作名 DuoGame，仓库名 todayGame。目标是让两个人在一台 Windows PC 上，在同一世界和同一屏幕中独立控制角色。暂不决定最终题材、战斗形式和美术。
+权威路线：[v5 主文档](reference/GAME_DEV_CODEX_MASTER_PLAN_V5.md)。工作名 DuoGame，仓库 todayGame，源码维持 0.5.0-dev；规划版本 v5 不是发布版本。
 
-技术基线：Cocos Creator 3.8.6、TypeScript、1280 × 720 设计分辨率、单一正交相机。第一版采用矩形俯视原型，属于可替换的基础表达方式。
+固定技术方向：Cocos Creator 3.8.6 + TypeScript、Windows PC、3D 世界、首发本地双人同屏；P1/P2 共用角色 Prefab，支持两套键盘、键盘/手柄与双手柄。共享一个游戏视角，2D UI 覆盖相机不构成分屏。
 
-首批代码覆盖规划 Task 0–7：工程文档、输入抽象、玩家复用、独立移动、加入分配、共享相机、热插拔状态与测试房间。Task 8 验收 / 发布暂未执行。
+最终 Genre、合作或竞争、线性叙事、视觉风格均未锁定。当前守门接力是合作候选 A，不代表产品已经选定解谜或故事方向。没有游戏账号、服务器、联机同步或商业化功能。
 
-当前版本为 `0.2.0-dev`，在首版双人底座上增加核心服务与设置层。已通过自动逻辑测试和官方引擎声明类型检查，尚不是经过 Creator 实机 / Windows 验收的可执行交付。
+本轮将原有平面规则投射到 3D XZ 地面：角色、地板、墙体、机关使用引擎网格和标准材质、方向光；UI 保留 2D。角色当前贴地行走，没有跳跃、重力、斜坡或动态刚体玩法。具体实现与边界见 [3D 迁移](MIGRATION_3D.md)。
 
-新增范围：Settings、Persistence、Capability、Audio、Control Settings、Accessibility、Localization、Pause / Focus 和 Development Diagnostics。服务职责见 CORE_SERVICES.md；功能与验收分开记录，未创建发布 Tag。
+v0.5 是最后一层强制通用基础；之后用不同类型灰盒收集证据，Prototype Gate → Direction Lock → 最小 Genre Packs → Vertical Slice → Foundation Lock。自动检查不代替双人试玩和 Windows 验收。
 
-范围内：双键盘映射、键盘与手柄混合、双手柄、静态房间碰撞、连接状态、重置与返回大厅。
-
-范围外：分屏、账号、服务器、排行榜、商城、网络同步、移动触屏、微信 / 抖音、Steam SDK、敌人、武器、正式音画资源。
-
-后续扩展应替换适配器或独立模块，不让 Player 直接依赖平台 API，也不为未来平台提前加入复杂基础设施。
+外部资产来源策略为 Quaternius / Fab Free / itch.io Free，必须逐资源记录许可和技术检查。用户负责视觉选择和批准，Codex 负责技术接入。当前没有批准或导入任何外部正式资产。

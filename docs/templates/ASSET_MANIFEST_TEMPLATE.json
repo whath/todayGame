@@ -1,0 +1,11 @@
+{
+  "id": "REQUIRED",
+  "source": { "provider": "REQUIRED", "url": null, "author": null, "obtained_at": null, "archive_sha256": null },
+  "license": { "type": "UNKNOWN", "evidence_path": null, "commercial_use": null, "modification_allowed": null, "redistribution_terms": null, "attribution_required": null, "attribution_text": null },
+  "status": "DISCOVERED",
+  "category": null,
+  "formats": [],
+  "approval": { "approved_by_user": false, "record": null, "date": null },
+  "processing": { "scale_checked": false, "orientation_checked": false, "material_checked": false, "collision_checked": false, "cocos_imported": false },
+  "integration": { "content_ids": [], "prefabs": [], "preview": "NOT RUN", "windows_build": "NOT RUN" }
+}

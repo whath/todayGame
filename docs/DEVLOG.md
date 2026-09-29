@@ -126,3 +126,16 @@ Root Cause：独立渲染根仅比较各自 siblingIndex，无法表达跨父节
 Result：修复后主菜单、双键盘加入、关卡、HUD、暂停、设置和恢复均实际预览通过；88 项自动测试及类型／语法／内容检查通过。完整通关、真实手柄、Windows 游戏构建仍 NOT RUN；服务插件错误不阻断本次预览。
 Footage Markers：NOT RECORDED，仅保留首次预览截图。
 Next：完整双人接力试玩与存档／设备回归，之后做 Windows 开发构建；据试玩证据再推进 Prototype Gate。
+
+## 2026-09-29 — v5 工作流对齐与 3D 灰盒迁移
+
+Goal：对齐 v5 主文档/压缩包，并按用户明确选择在本轮迁移 3D。
+Design Discussion：用户选择同时迁移；类型不锁定，保留接力为候选。其他实现选择由工程判断，未虚构试玩讨论。
+Decision：米制 3D XZ 世界 + 2D UI；旧平面 DTO 通过坐标适配保留；现有机关规则归 relay Pack；角色/Skills 按需使用，不自动委派。
+Codex Task：核对附件哈希/差量、合并工作流与规范、迁移渲染/相机/坐标、补齐 v5 多人合同并回归。
+Implementation：3D Mesh/标准材质/方向光、单共享世界视角与 UI 相机、投影标记、CameraPolicy、Inactive、Opponent、Competitive、Shared、Pack 隔离、资产目录/Manifest/许可记录；46 Skills、19 可选角色模板。
+Problems：首轮 3D 材质未预加载导致空 passes 与销毁异常；打开场景缓存保留旧序列化字段；初版出生取景偏移。
+Root Cause：运行时 effectName 不是序列化资源依赖，Cocos 不保证自动加载；外部场景修改需重新打开；共享中点策略缺少房间边界约束。
+Result：96 项自动测试、官方类型、71 脚本语法及 3 内容/97 UUID 检查通过；浏览器 3D 显示、双键盘加入/短移动、重开、暂停/设置、保存返回/继续通过。完整通关、旧真实用户档、手柄和 Windows 构建 NOT RUN。无外部正式素材、无发布 Tag。
+Footage Markers：NOT RECORDED；截图 docs/evidence/v5-3d-preview.png。
+Next：完整 3D 接力回归与真实设备/Windows Gate，再对比玩法候选并以证据决定 KEEP/ITERATE/KILL。

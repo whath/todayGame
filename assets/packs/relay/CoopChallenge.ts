@@ -1,7 +1,7 @@
-import { Box, CollisionWorld } from './CollisionWorld';
-import { MoveVector, PlayerId } from './InputTypes';
-import { InteractionResult, InteractionService } from './InteractionService';
-import { TriggerRule } from './GameplayKernel';
+import { Box, CollisionWorld } from '../../core/CollisionWorld';
+import { MoveVector, PlayerId } from '../../core/InputTypes';
+import { InteractionResult, InteractionService } from '../../core/InteractionService';
+import { TriggerRule } from '../../core/GameplayKernel';
 export interface CoopDefinition { readonly plate: Box; readonly gate: Box; readonly terminal: MoveVector; readonly interactRadius: number; readonly exit: Box }
 export interface CoopSnapshot { gateLatched: boolean; completed: boolean }
 export interface CoopActor extends MoveVector { readonly playerId: PlayerId; readonly interact: boolean }

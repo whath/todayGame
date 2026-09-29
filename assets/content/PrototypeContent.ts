@@ -5,6 +5,7 @@ export const ROOM_CONTENT_ID = 'level.prototype.room_01';
 export const PLAYER_ASSET_ID = 'prefab.player';
 export const PROTOTYPE_LEVEL: LevelDefinition = {
     id: ROOM_CONTENT_ID, kind: 'level', nameId: 'content.prototypeRoom', dependencies: [PLAYER_CONTENT_ID], characterId: PLAYER_CONTENT_ID,
+    relationship: 'neutral', cameraPolicy: 'fixed-room',
     bounds: { x: -800, y: -450, width: 1600, height: 900 },
     spawns: [{ x: -230, y: -170 }, { x: 230, y: -170 }],
     obstacles: [

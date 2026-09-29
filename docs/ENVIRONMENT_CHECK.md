@@ -48,3 +48,6 @@ Creator 自动更新了构建设置版本、默认包设置及 Player Prefab 的
 
 Next：先做完整双人接力试玩、暂停／恢复／存档回归和真实设备组合检查，再验证 Windows 开发构建；不将此次冒烟检查视为 Prototype Gate 通过。
 Footage Markers：NOT RECORDED（仅截图，未录制视频）。
+
+## v5 后续状态
+同日已迁移并预览 3D 灰盒；最新结果见 [VALIDATION_V5](VALIDATION_V5.md)。本页前面的 2D 首次启动记录保留为历史，不作为 3D 或 Windows Gate 结论。

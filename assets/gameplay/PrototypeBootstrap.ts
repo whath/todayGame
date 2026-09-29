@@ -1,4 +1,6 @@
-import { _decorator, Camera, Color, Component, instantiate, Layers, Node, Prefab, RenderRoot2D } from 'cc';
+import { _decorator, Camera, Color, Component, DirectionalLight, instantiate, Layers, Material, Node, Prefab, RenderRoot2D, Vec3 } from 'cc';
+import { toWorld } from '../core/WorldCoordinates';
+import { FixedRoomCameraPolicy, SharedGroupCameraPolicy } from '../core/CameraPolicy';
 import { GameServices } from '../app/GameServices';
 import { SharedCamera } from '../camera/SharedCamera';
 import { GameSession } from '../core/GameSession';
@@ -21,16 +23,18 @@ import { RuntimeChoice, RuntimeScreen, RuntimeScreenModel } from '../ui/RuntimeS
 import { SettingsMenu } from '../ui/SettingsMenu';
 import { PrototypeRoom } from './PrototypeRoom';
 import { COOP_LEVEL_ID } from '../content/CoopLevel';
-import { CoopActor, CoopChallenge } from '../core/CoopChallenge';
+import { CoopActor, CoopChallenge } from '../packs/relay/CoopChallenge';
 import { CoopPresentation } from './CoopPresentation';
 import { SpawnService } from '../core/SpawnService';
-import { resolvePairMotion } from '../core/CoopPolicies';
-import { coopViewModel } from '../core/GameHUDViewModel';
+import { resolvePairMotion } from '../core/MultiplayerPolicies';
+import { coopViewModel } from '../packs/relay/RelayHUDViewModel';
 const { ccclass, property } = _decorator;
 
 @ccclass('PrototypeBootstrap')
 export class PrototypeBootstrap extends Component {
     @property(Prefab) public playerPrefab: Prefab | null = null;
+    /** Serialized dependency ensures builtin-standard is included/preloaded in preview and builds. */
+    @property(Material) public greyboxMaterial: Material | null = null;
     @property public lab = '';
     private readonly services = new GameServices();
     private readonly inputManager = new InputManager();
@@ -62,6 +66,7 @@ export class PrototypeBootstrap extends Component {
     private assets!: AssetService<Prefab>;
     private flow!: SceneFlowService<Prefab>;
     private camera!: Camera;
+    private worldCamera!: Camera;
     private sharedCamera!: SharedCamera;
     private hud!: PrototypeHUD;
     private screen!: RuntimeScreen;
@@ -79,16 +84,25 @@ export class PrototypeBootstrap extends Component {
     private get saves() { return this.lab ? this.services.labSaves : this.services.saves; }
 
     protected start(): void {
-        // One render root makes world -> HUD -> menus follow the node hierarchy.
-        this.node.addComponent(RenderRoot2D);
-        const cameraNode = new Node('Shared Camera'); cameraNode.parent = this.node; cameraNode.setPosition(0, 0, 1000);
+        const worldCameraNode = new Node('Shared 3D Camera'); worldCameraNode.parent = this.node;
+        this.worldCamera = worldCameraNode.addComponent(Camera);
+        this.worldCamera.projection = Camera.ProjectionType.ORTHO; this.worldCamera.orthoHeight = 5;
+        this.worldCamera.near = 0.1; this.worldCamera.far = 100;
+        this.worldCamera.visibility = Layers.Enum.DEFAULT; this.worldCamera.priority = 0;
+        this.worldCamera.clearFlags = Camera.ClearFlag.SOLID_COLOR; this.worldCamera.clearColor = new Color(14, 21, 33);
+        this.sharedCamera = worldCameraNode.addComponent(SharedCamera);
+        const sunlight = new Node('Greybox sunlight'); sunlight.parent = this.node; sunlight.setRotationFromEuler(-55, -25, 0);
+        sunlight.addComponent(DirectionalLight).illuminance = 65000;
+        // One UI render root, on a separate camera/layer: 3D depth cannot occlude menus.
+        const cameraNode = new Node('UI Overlay Camera'); cameraNode.parent = this.node; cameraNode.setPosition(0, 0, 1000);
+        cameraNode.addComponent(RenderRoot2D);
         this.camera = cameraNode.addComponent(Camera);
         this.camera.projection = Camera.ProjectionType.ORTHO; this.camera.orthoHeight = 360; this.camera.near = 1; this.camera.far = 2000;
-        this.camera.clearFlags = Camera.ClearFlag.SOLID_COLOR; this.camera.clearColor = new Color(14, 21, 33); this.camera.visibility = Layers.Enum.UI_2D;
-        this.sharedCamera = cameraNode.addComponent(SharedCamera);
+        this.camera.clearFlags = Camera.ClearFlag.DEPTH_ONLY; this.camera.priority = 1; this.camera.visibility = Layers.Enum.UI_2D;
         this.hud = new PrototypeHUD(this.camera, this.services);
         this.screen = new RuntimeScreen(this.camera, this.allowPointer);
         try {
+            if (!this.greyboxMaterial?.effectAsset) throw Error('Missing Greybox material scene dependency');
             this.services.boot(id => id === PLAYER_ASSET_ID && this.playerPrefab !== null, this.lab !== '');
         } catch (error) { this.hud.showError(String(error)); this.services.logger.log('BOOT', 'ERROR', String(error)); return; }
         this.audio = new CocosAudioAdapter(this.node, this.services.audio);
@@ -131,7 +145,7 @@ export class PrototypeBootstrap extends Component {
         const level = this.services.content.level(request.contentId ?? ROOM_CONTENT_ID);
         const character = this.services.content.character(level.characterId);
         progress(0.1); const prefab = await scope.acquire(character.prefabId); progress(0.7);
-        const root = new Node('Game World'); root.active = false; root.parent = this.node; root.layer = Layers.Enum.UI_2D;
+        const root = new Node('Game World 3D'); root.active = false; root.parent = this.node; root.layer = Layers.Enum.DEFAULT;
         root.setSiblingIndex(0);
         const players: PlayerController[] = [];
         try {
@@ -139,7 +153,10 @@ export class PrototypeBootstrap extends Component {
             for (const slot of this.inputManager.slots) {
                 const node = instantiate(prefab); node.parent = root;
                 const player = node.getComponent(PlayerController)!;
-                player.initialize(slot, this.services.localization, this.services.accessibility, character); players.push(player);
+                node.layer = Layers.Enum.DEFAULT;
+                player.initialize(slot, this.services.localization, this.services.accessibility, character,
+                    level.relationship === 'cooperative' ? 'players' : null); players.push(player);
+                if (level.relationship === 'competitive') player.actor.tags.add(`opponent.player.${slot.playerId === 1 ? 2 : 1}`);
             }
             const resume = this.pendingResume;
             const seed = resume?.seed ?? ((Date.now() >>> 0) || 1);
@@ -153,8 +170,8 @@ export class PrototypeBootstrap extends Component {
                 player.reset(safe); occupied.push(safe);
             }
             const challenge = level.coop ? new CoopChallenge(level.coop, character.halfSize, snapshot.coop) : null;
-            if (challenge) challenge.update(players.map(p => ({ playerId: p.playerId, x: p.node.position.x, y: p.node.position.y, interact: false })), false);
-            const challengeView = challenge ? new CoopPresentation(root, challenge, this.services.localization) : null;
+            if (challenge) challenge.update(players.map(p => ({ playerId: p.playerId, ...p.groundPosition, interact: false })), false);
+            const challengeView = challenge ? new CoopPresentation(root, challenge) : null;
             progress(1);
             return { activate: () => {
                 this.players = players; this.room = room; this.activeSession = snapshot;
@@ -163,7 +180,8 @@ export class PrototypeBootstrap extends Component {
                 if (!resume) this.profile.sessionsStarted++;
                 this.pendingResume = null; root.active = true;
                 this.services.pause.clearManual(); this.subpage = 'none';
-                this.sharedCamera.initialize(this.camera, players.map(p => p.node), room.bounds);
+                this.sharedCamera.initialize(this.worldCamera, players.map(p => p.node), room.bounds,
+                    level.cameraPolicy === 'fixed-room' || this.lab === 'CameraLab' ? new FixedRoomCameraPolicy() : new SharedGroupCameraPolicy());
             }, dispose: () => {
                 challenge?.interactions.clear();
                 root.active = false; root.destroy(); if (this.players === players) this.players = [];
@@ -194,7 +212,7 @@ export class PrototypeBootstrap extends Component {
         let session: SessionSnapshot | null = null;
         if (this.activeSession && this.players.length === 2) session = { ...this.activeSession,
             seed: this.services.random.seed, randomState: this.services.random.currentState, elapsedSeconds: this.services.time.gameElapsed,
-            players: this.players.map(player => ({ playerId: player.playerId, x: player.node.position.x, y: player.node.position.y })) };
+            players: this.players.map(player => ({ playerId: player.playerId, ...player.groundPosition })) };
         if (session && this.challenge) session.coop = this.challenge.snapshot();
         return { schemaVersion: 3, profileId: 'profile.default', slotId: 'slot1', savedAt: Date.now(), profile: this.profile, session };
     }
@@ -292,7 +310,7 @@ export class PrototypeBootstrap extends Component {
         this.keyboard.endFrame();
         if (this.challenge && !paused) this.challenge.update(this.challengeActors(), false);
         const collision = this.challenge?.collision(this.room.bounds, this.room.obstacles) ?? this.room.collision;
-        const before = this.players.map(p => ({ x: p.node.position.x, y: p.node.position.y }));
+        const before = this.players.map(p => p.groundPosition);
         this.players.forEach(player => player.tick(this.services.time.gameDelta, collision, !paused));
         let blockProgress = false;
         if (!paused && this.players.length === 2 && this.lab !== 'CameraLab') {
@@ -306,7 +324,7 @@ export class PrototypeBootstrap extends Component {
                 const safe = this.spawns.resolve(this.room.spawns[i], this.room.spawns, this.room.bounds, collision.obstacles, half, occupied);
                 occupied.push(safe); return safe;
             }) : resolved.positions;
-            this.players.forEach((p, i) => p.node.setPosition(positions[i].x, positions[i].y, 0));
+            this.players.forEach((p, i) => p.place(positions[i]));
         }
         if (this.challenge && !paused) {
             const latched = this.challenge.gateLatched;
@@ -322,11 +340,23 @@ export class PrototypeBootstrap extends Component {
         this.challengeView?.update();
         if (this.lab === 'CameraLab' && this.players.length === 2 && !paused) {
             const phase = this.services.time.gameElapsed;
-            this.players[0].node.setPosition(-250 - Math.sin(phase * 0.5) * 200, -100 + Math.cos(phase * 0.5) * 150);
-            this.players[1].node.setPosition(250 + Math.sin(phase * 0.5) * 200, 100 - Math.cos(phase * 0.5) * 150);
+            this.players[0].place({ x: -250 - Math.sin(phase * 0.5) * 200, y: -100 + Math.cos(phase * 0.5) * 150 });
+            this.players[1].place({ x: 250 + Math.sin(phase * 0.5) * 200, y: 100 - Math.cos(phase * 0.5) * 150 });
         }
         if (this.players.length) { this.sharedCamera.smoothing = this.services.accessibility.cameraSmoothing; this.sharedCamera.tick(this.services.time.gameDelta); this.separationWarning ||= this.sharedCamera.offscreen; }
         this.hud.update(this.inputManager, this.session, this.challenge ? this.challengeHints() : undefined);
+        const markers = this.players.map(p => ({ text: this.t('world.player', { player: p.playerId }),
+            point: new Vec3(p.node.worldPosition.x, 1.0, p.node.worldPosition.z) }));
+        if (this.challenge) {
+            const d = this.challenge.definition;
+            const label = (id: string, x: number, y: number, height: number) => {
+                const p = toWorld({ x, y }, height); markers.push({ text: this.t(id), point: new Vec3(p.x, p.y, p.z) });
+            };
+            label('coop.plate', d.plate.x + d.plate.width / 2, d.plate.y, 0.12);
+            label('coop.terminal', d.terminal.x, d.terminal.y, 0.9);
+            label('coop.exit', d.exit.x + d.exit.width / 2, d.exit.y, 0.12);
+        }
+        this.hud.trackWorld(this.worldCamera, markers);
         this.screen.update(this.screenModel(), this.services.accessibility.uiScale, this.services.time.uiDelta, !this.menu.isOpen);
         this.menu.update(this.services.accessibility.uiScale);
     }
@@ -398,7 +428,7 @@ export class PrototypeBootstrap extends Component {
             buildLabel: this.services.policy.buildLabel ? `${build.version} / ${build.buildId} / ${build.commit} / ${build.variant} / seed ${this.services.random.seed}` : '' };
     }
     private challengeActors(): CoopActor[] {
-        return this.players.map(p => ({ playerId: p.playerId, x: p.node.position.x, y: p.node.position.y,
+        return this.players.map(p => ({ playerId: p.playerId, ...p.groundPosition,
             interact: this.inputManager.slots[p.playerId - 1].presence.state === 'Active' && !p.actor.tags.has('state.disabled')
                 && this.inputManager.slots[p.playerId - 1].isInteractPressed() }));
     }

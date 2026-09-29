@@ -22,7 +22,7 @@ TimeService 的 unscaledDelta 是安全非负原始 dt；uiDelta 上限 100ms；
 
 ## 表现、反馈与事件
 
-PlayerController 管行为，PlayerPresentation 管 Graphics / Label、动作文字和边框。P1 圆角与 P2 方角并配 P1/P2 标签，不只靠颜色区分。FeedbackService 接收 UI 确认 / 取消事件，预留 camera / rumble hook；当前无可靠震动和镜头震动后端，因此保持关闭，菜单不暴露假能力。减少闪烁会抑制 UI 脉冲。
+PlayerController 管行为，PlayerPresentation 管 3D 网格与动作颜色反馈，HUD 投影标签。P1 球体与 P2 方柱并配 P1/P2 标签，不只靠颜色区分。FeedbackService 接收 UI 确认 / 取消事件，预留 camera / rumble hook；当前无可靠震动和镜头震动后端，因此保持关闭，菜单不暴露假能力。减少闪烁会抑制 UI 脉冲。
 
 DomainEvent 是实例持有的类型化订阅，不是全局字符串 EventBus；Join、Transition、Save、Feedback 有各自合同，返回取消订阅函数，服务销毁清理。主要业务依赖仍使用显式注入。
 

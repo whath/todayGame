@@ -1,20 +1,20 @@
 # DuoGame / todayGame
 
-Windows PC 本地双人基础工程，Cocos Creator **3.8.6 + TypeScript**。当前为 **0.5.0-dev — Co-op Robustness & Universal Gameplay Kernel**，按 [需求 v4](docs/reference/GAME_DEV_CODEX_MASTER_PLAN_V4.md) 补齐差量。Windows、Prototype 和 Vertical Slice Gate 尚未通过，没有发布 Tag。
+Windows PC 3D 本地双人基础工程，Cocos Creator **3.8.6 + TypeScript**。当前为 **0.5.0-dev — 3D Local Multiplayer & Universal Gameplay Kernel**，按 [需求 v5](docs/reference/GAME_DEV_CODEX_MASTER_PLAN_V5.md) 补齐差量。Windows、Prototype 和 Vertical Slice Gate 尚未通过，没有发布 Tag。
 
 ## 本轮差量
 
-新增 Player Presence、交互仲裁／所有权、空间与碰撞策略、安全出生、菜单打开者归属、目标反馈、Actor／Action／Trigger 合同和纯 HUD 模型。已有接力关已接入这些合同；加入页支持单独退出槽位。增加 KeyboardGhostingLab 和内容校验工具。
+已按 v5 迁移 3D 灰盒（角色、地板、墙体、接力机关、方向光和共享相机），保留独立 2D UI。底座不预设合作：Inactive、Opponent、Competitive 仲裁与 Shared 占有接入；接力专用规则移至 packs/relay。合并 46 项 Skills、19 个可选角色模板和外部资产流程。
 
-[差量对照](docs/PLAN_DELTA_V4.md) · [合作健壮性](docs/COOP_ROBUSTNESS.md) · [玩法内核](docs/GAMEPLAY_KERNEL.md) · [Prototype Gate](docs/PROTOTYPE_GATE.md)
+[v5 差量](docs/PLAN_DELTA_V5.md) · [本地多人](docs/LOCAL_MULTIPLAYER_ROBUSTNESS.md) · [3D 迁移](docs/MIGRATION_3D.md) · [工作流](docs/WORKFLOW_V5.md) · [玩法内核](docs/GAMEPLAY_KERNEL.md) · [Prototype Gate](docs/PROTOTYPE_GATE.md)
 
-## 当前可玩内容（尚未实机验收）
+## 当前可玩内容（完整 Gate 尚未通过）
 
 新游戏进入“守门与接力”：一人站住左侧踏板，另一人穿门并在终端附近按交互键（默认 P1 E / P2 L，手柄 West），让门永久开启；两人共同进入右侧出口完成挑战。终端解锁和通关自动保存。F5 或暂停菜单重开；结果菜单可再次挑战。旧存档继续进入原测试房间，原四个 Lab 保留。
 
-2026-09-29 已完成环境检查、Creator 3.8.6 首次导入和浏览器预览。已验证主菜单 → 两套键盘加入 → 关卡 → 暂停／设置 → 恢复，并修复世界遮挡 HUD 和菜单的问题。修复后 88 项测试及类型／语法／内容检查通过。Windows 游戏构建、真实手柄和完整双人通关仍未验证，实机 Gate 尚未通过。详见 [环境与首次预览记录](docs/ENVIRONMENT_CHECK.md)。
+2026-09-29 已完成 Creator 3.8.6 首次导入及 v5 的 3D 浏览器预览：双键盘加入、短距离移动、重开、暂停/设置、保存返回/继续均已检查。96 项自动测试、官方类型、71 脚本语法、3 内容/97 UUID 检查通过。完整双人通关、真实手柄和 Windows 游戏构建仍待验证，未通过发布或 Prototype Gate。详见 [v5 验证](docs/VALIDATION_V5.md)；此前环境记录保留在 [环境检查](docs/ENVIRONMENT_CHECK.md)。
 
-[一页游戏定义](docs/GAME_DEFINITION.md) · [挑战规则](docs/COOP_CHALLENGE.md) · [本轮验证](docs/VALIDATION_PLAN_V4.md)
+[一页游戏定义](docs/GAME_DEFINITION.md) · [挑战规则](docs/COOP_CHALLENGE.md) · [本轮验证](docs/VALIDATION_V5.md)
 
 ## 基础层能力
 
@@ -33,7 +33,7 @@ Windows PC 本地双人基础工程，Cocos Creator **3.8.6 + TypeScript**。当
 3. 游戏中打开暂停菜单，可保存、重开、设置或返回主菜单。返回菜单 / 加入界面前保存失败时会留在当前游戏。
 4. 继续游戏先重新分配设备，再恢复两人位置、经过时间和随机状态。
 
-首次浏览器预览已验证加入与暂停／设置基本流程；存档恢复、完整通关和真实设备组合仍需按 Gate 逐项验收。
+3D 浏览器预览已验证加入、暂停/设置、重开及当前档保存/恢复；完整通关、旧真实存档和真实设备组合仍需按 Gate 逐项验收。
 
 | 操作 | 键盘 | 手柄 |
 | --- | --- | --- |
@@ -51,7 +51,7 @@ Windows PC 本地双人基础工程，Cocos Creator **3.8.6 + TypeScript**。当
 
 手柄移动用左摇杆 / 十字键，动作使用 South / East / West。Keyboard A/B 加入前用各自默认配置，加入后跟随实际 P1/P2 槽位；映射切换需松开按键。两套逻辑映射不能识别两把 USB 键盘的硬件身份。
 
-设置维持 Preview / Apply / Cancel；不支持的显示和震动能力不开放。原型仍无正式音频 / 美术、敌人、战斗和联网功能。
+设置维持 Preview / Apply / Cancel；不支持的显示和震动能力不开放。类型仍未锁定，合作接力只是候选 A。原型仍无正式音频 / 美术、敌人、战斗和联网功能。
 
 ## 验证与构建
 
@@ -63,6 +63,6 @@ node tools/prepare-build.cjs development
 
 开发依赖只有 TypeScript 5.9.3 和官方 Cocos 3.8.6 声明。构建准备命令只生成配置和 BuildInfo，不运行 Creator。切回编辑器前重新准备 development；Windows 构建见 [构建变体](docs/BUILD_VARIANTS.md)。
 
-当前自动结果和待验收项见 [当前验证记录](docs/VALIDATION_PLAN_V4.md)。本轮没有增加生产依赖。
+当前自动结果和待验收项见 [当前验证记录](docs/VALIDATION_V5.md)。本轮没有增加生产依赖。
 
 文档：[架构](docs/ARCHITECTURE.md) · [运行时](docs/RUNTIME_DESIGN.md) · [存档](docs/SAVE_DESIGN.md) · [内容与资源](docs/CONTENT_DESIGN.md) · [设置](docs/SETTINGS_DESIGN.md) · [实验场景](docs/TEST_LABS.md) · [路线图](docs/ROADMAP.md) · [日志](docs/DEVLOG.md)

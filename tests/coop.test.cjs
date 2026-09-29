@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { CoopChallenge } = require('../temp/core-tests/core/CoopChallenge');
+const { CoopChallenge } = require('../temp/core-tests/packs/relay/CoopChallenge');
 const { COOP_LEVEL, COOP_LEVEL_ID } = require('../temp/core-tests/content/CoopLevel');
 const { createPrototypeContent } = require('../temp/core-tests/content/PrototypeContent');
 const { SaveSerializer } = require('../temp/core-tests/save/SaveSerializer');

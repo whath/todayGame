@@ -1,8 +1,8 @@
-# Local Co-op Robustness
+# 本地多人实现与接力专用审计
 
 ## 身份与设备
 
-PlayerPresence 属于稳定 P1/P2 槽位，设备连接对象可被替换。首次加入为 Empty → Joining → Ready，进入房间激活为 Active。断线保存原状态，再加入恢复；Downed / Spectating 只提供显式转换接口，不假定有战斗或死亡。
+PlayerPresence 属于稳定 P1/P2 槽位，设备连接对象可被替换。首次加入为 Empty → Joining → Ready，进入房间激活为 Active。断线保存原状态，再加入恢复；Inactive / Spectating 只提供显式转换接口，不假定有战斗或死亡。
 
 加入页面可选择 P1 / P2 退出槽位，Leaving → Empty；需设备回到 neutral 后重新按键才能加入。回主菜单释放全部槽位；游戏中当前离开路径是返回加入页。重连保持原槽位顺序，不声称永久识别硬件序列号。
 
@@ -32,7 +32,7 @@ Main Menu / Local Join 为 Any。暂停保存打开来源；设置继承上层 o
 
 FeedbackService 的目标为 Player1 / Player2 / AllPlayers / World。Rumble 按目标路由，World 不震动手柄；Audio / VFX 接受语义 ID。实际 Rumble 与 Camera hook 未开放，当前只能证明路由逻辑，不能声称有实际音效或硬件震动。
 
-## Co-op soft-lock audit
+## 当前接力候选的 soft-lock audit
 
 | 风险 | 当前处理 | 证据／限制 |
 | --- | --- | --- |

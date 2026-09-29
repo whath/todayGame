@@ -1,4 +1,4 @@
-import { CoopSnapshot } from '../core/CoopChallenge';
+import { CoopSnapshot } from '../packs/relay/CoopChallenge';
 export const SAVE_SCHEMA_VERSION = 3;
 export interface ProfileSnapshot { unlockedContentIds: string[]; completedLevelIds: string[]; sessionsStarted: number }
 export interface SessionSnapshot {

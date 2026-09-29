@@ -16,3 +16,6 @@ SaveSerializer 重建已知字段，检查 ID、有限值、整数范围、角�
 ## v0.4 机关进度
 
 Session.coop 保存永久开门与完成状态，仅允许协作关卡携带。schema 1 → 2 → 3 迁移保留旧测试房间，不把旧坐标放入新关卡。终端解锁和共同撤离也触发保存，迁移前原文备份规则不变；详见 COOP_CHALLENGE。
+
+## v5 compatibility
+玩家 x/y 仍是旧关卡地面厘米坐标，通过 WorldCoordinates 映射为引擎 XZ 米制；引擎 Y 是高度，不写入 schema 3。旧档无需改值或升级 schema。需要多层高度玩法时另定义带迁移方案的存档版本，不能把旧 y 静默解释成高度。

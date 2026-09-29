@@ -107,6 +107,7 @@
     },
     "_enabled": true,
     "__prefab": null,
+    "greyboxMaterial": { "__uuid__": "8c068f42-c908-48ea-becb-2c763f27403d", "__expectedType__": "cc.Material" },
     "playerPrefab": {
       "__uuid__": "1dc33516-053f-5074-ac6f-c013827f2a2a",
       "__expectedType__": "cc.Prefab"

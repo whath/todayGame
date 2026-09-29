@@ -14,3 +14,6 @@
 12. 用户要求跳过验证时明确记录 NOT RUN，不能把代码编写完成等同于运行通过。
 13. 设置 UI 只改工作副本；Apply 保存，Cancel 恢复；不在 slider / 每帧更新中写入存储。
 14. 未实现平台能力不开放菜单选项。暂停、音量、界面文案分别由 PauseService、AudioService、LocalizationService 所有。
+
+## v5
+3D 世界、共享视角和 2D 覆盖 UI；具体关系与相机策略由关卡选择。Core 不包含接力专用规则。遵循根 AGENTS 与 v5 主文档；当前用户指令优先于附件示例和可选角色模板。

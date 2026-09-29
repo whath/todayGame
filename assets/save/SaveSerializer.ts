@@ -1,6 +1,6 @@
 import { ContentRegistry, isWalkable } from '../content/ContentRegistry';
 import { SAVE_SCHEMA_VERSION, saveKey, SaveSnapshot } from './SaveSnapshot';
-import { inside } from '../core/CoopChallenge';
+import { inside } from '../packs/relay/CoopChallenge';
 
 export class FutureSaveError extends Error {}
 function object(value: unknown): value is Record<string, unknown> { return typeof value === 'object' && value !== null && !Array.isArray(value); }

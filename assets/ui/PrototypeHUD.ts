@@ -1,10 +1,10 @@
-import { Camera, Color, Graphics, Label, Layers, Node, UITransform, view } from 'cc';
+import { Camera, Color, Graphics, Label, Layers, Node, UITransform, Vec3, view } from 'cc';
 import { GameServices } from '../app/GameServices';
 import { GameSession } from '../core/GameSession';
 import { InputManager } from '../input/InputManager';
 import { CONTROL_ACTIONS } from '../settings/DefaultSettings';
 
-/** Single-camera HUD; all user-facing text comes from localization IDs. */
+/** Overlay camera HUD; world markers project here, never inside Player. */
 export class PrototypeHUD {
     private readonly root = new Node('HUD');
     private readonly header: Label;
@@ -13,6 +13,7 @@ export class PrototypeHUD {
     private readonly debug: Label;
     private readonly panel: Graphics;
     private previousWidth = 0;
+    private readonly markers: Label[] = [];
 
     public constructor(private readonly camera: Camera, private readonly services: GameServices) {
         this.root.layer = Layers.Enum.UI_2D;
@@ -23,6 +24,25 @@ export class PrototypeHUD {
         this.status = this.label('Session and devices', 16);
         this.help = this.label('Controls', 14);
         this.debug = this.label('Development diagnostics', 16);
+    }
+    public trackWorld(camera: Camera, markers: readonly { text: string; point: Vec3 }[]): void {
+        while (this.markers.length < markers.length) {
+            const label = this.label('World marker', 17);
+            label.getComponent(UITransform)!.setAnchorPoint(0.5, 0);
+            label.getComponent(UITransform)!.setContentSize(240, 30);
+            label.horizontalAlign = Label.HorizontalAlign.CENTER;
+            this.markers.push(label);
+        }
+        const size = view.getVisibleSize(), scale = this.services.accessibility.uiScale;
+        this.markers.forEach((label, index) => {
+            const marker = markers[index]; label.node.active = !!marker;
+            if (!marker) return;
+            const p = camera.worldToScreen(marker.point);
+            const x = p.x / camera.camera.width, y = p.y / camera.camera.height;
+            label.node.active = x > 0 && x < 1 && y > 100 / 720 && y < 1 - 139 / 720;
+            label.string = marker.text;
+            label.node.setPosition((x - 0.5) * 720 * size.width / size.height / scale, (y - 0.5) * 720 / scale);
+        });
     }
     public update(manager: InputManager, session: GameSession, challenge?: { title: string; help: string }): void {
         const services = this.services;

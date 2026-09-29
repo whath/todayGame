@@ -49,3 +49,6 @@ KeyboardAdapter 保存本帧按键脉冲，即便快速按下并松开，Join �
 ## v4 玩家与 UI 归属
 
 槽位加入／退出／重连更新 PlayerPresence；加入页可单独释放 P1/P2，等待旧输入松开后才能重新加入。菜单对每只手柄单独生成边沿；主菜单 Any，暂停与设置由打开来源拥有，确认框继承设置 owner。断线后释放菜单 owner 供剩余设备接管。键鼠是共享 keyboard 来源；键盘捕获只在 owner 主动开启时允许输入键值。
+
+## 3D 输入约定
+语义 Move 使用二维操纵平面，Player 适配器将其映射到 3D XZ 地面，+Y 语义前进对应世界 -Z；引擎 +Y 是高度。物理按键不进入 Actor，当前未实现 Network/Replay/AI 输入来源。

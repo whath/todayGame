@@ -1,6 +1,6 @@
 import { DomainEvent } from '../runtime/DomainEvent';
-export type Owner = 'None' | 'Player1' | 'Player2' | 'Team' | 'World';
-export type Relation = 'Self' | 'Partner' | 'Team' | 'Neutral' | 'Hostile';
+export type Owner = 'None' | 'Player1' | 'Player2' | 'Team' | 'Shared' | 'World';
+export type Relation = 'Self' | 'Player' | 'Partner' | 'Opponent' | 'Team' | 'Neutral';
 export type ActionSemantic = 'Move' | 'PrimaryAction' | 'SecondaryAction' | 'Interact' | 'SpecialAction';
 export class Actor {
     public state = 'idle';
@@ -11,7 +11,8 @@ export class Actor {
     public relationTo(other: Actor): Relation {
         if (other.id === this.id) return 'Self';
         if (this.team && this.team === other.team) return this.tags.has('actor.player') && other.tags.has('actor.player') ? 'Partner' : 'Team';
-        return this.tags.has(`hostile.${other.team}`) ? 'Hostile' : 'Neutral';
+        if (this.tags.has(`opponent.${other.id}`) || (other.team && this.tags.has(`opponent-team.${other.team}`))) return 'Opponent';
+        return other.tags.has('actor.player') ? 'Player' : 'Neutral';
     }
 }
 export interface ActionContract {

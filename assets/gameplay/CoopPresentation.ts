@@ -1,44 +1,37 @@
-import { Color, Graphics, Label, Layers, Node, UITransform } from 'cc';
+import { Color, Node } from 'cc';
 import { Box } from '../core/CollisionWorld';
-import { CoopChallenge } from '../core/CoopChallenge';
-import { LocalizationService } from '../services/LocalizationService';
-/** Geometry-only world feedback; puzzle state belongs to the pure challenge. */
+import { CoopChallenge } from '../packs/relay/CoopChallenge';
+import { toWorld, WORLD_SCALE as S } from '../core/WorldCoordinates';
+import { GreyboxGeometry, greybox } from './GreyboxGeometry';
+/** Relay-specific 3D feedback. Rules and ground footprints stay in the challenge. */
 export class CoopPresentation {
-    private readonly graphics: Graphics;
-    private readonly gateLabel: Label;
+    private readonly plate: GreyboxGeometry;
+    private readonly gate: GreyboxGeometry;
+    private readonly terminal: GreyboxGeometry;
+    private readonly exit: GreyboxGeometry;
     private signature = '';
-    public constructor(parent: Node, private readonly challenge: CoopChallenge, private readonly locale: LocalizationService) {
-        const root = new Node('Relay mechanisms'); root.parent = parent; root.layer = Layers.Enum.UI_2D;
-        // Floor is first; draw mechanisms below player bodies, not over them.
-        root.setSiblingIndex(1);
-        this.graphics = root.addComponent(Graphics);
-        const c = challenge.definition;
-        this.label(root, 'coop.plate', c.plate.x + c.plate.width / 2, c.plate.y - 30);
-        this.label(root, 'coop.terminal', c.terminal.x, c.terminal.y - 65);
-        this.label(root, 'coop.exit', c.exit.x + c.exit.width / 2, c.exit.y - 30);
-        this.gateLabel = this.label(root, 'coop.closed', c.gate.x + c.gate.width / 2, c.gate.y - 30);
+    public constructor(parent: Node, private readonly challenge: CoopChallenge) {
+        const root = new Node('Relay mechanisms'); root.parent = parent;
+        const gold = new Color(220, 170, 60), c = challenge.definition;
+        const box = (name: string, b: Box, height: number, color: Color) => {
+            const p = toWorld({ x: b.x + b.width / 2, y: b.y + b.height / 2 });
+            return greybox(root, name, [p.x, height / 2 + 0.02, p.z], [b.width * S, height, b.height * S], color);
+        };
+        this.plate = box('Pressure plate', c.plate, 0.07, gold);
+        this.gate = box('Relay gate', c.gate, 0.9, new Color(195, 75, 80));
+        this.exit = box('Dual player exit', c.exit, 0.035, new Color(45, 105, 165));
+        const p = toWorld(c.terminal);
+        this.terminal = greybox(root, 'Terminal', [p.x, 0.36, p.z], [0.42, 0.72, 0.42], gold);
+        greybox(root, 'Terminal range', [p.x, 0.01, p.z], [c.interactRadius * S * 2, 0.015, c.interactRadius * S * 2], new Color(76, 87, 95));
         this.update();
     }
     public update(): void {
-        const c = this.challenge, d = c.definition;
-        const signature = `${c.gateOpen}/${c.gateLatched}/${c.platePlayer}/${c.completed}`;
+        const c = this.challenge, signature = `${c.gateOpen}/${c.gateLatched}/${c.platePlayer}/${c.completed}`;
         if (signature === this.signature) return; this.signature = signature;
-        const g = this.graphics; g.clear();
-        this.box(d.plate, c.platePlayer ? new Color(77, 196, 146) : new Color(202, 167, 70));
-        this.box(d.exit, c.completed ? new Color(77, 196, 146) : new Color(52, 103, 145));
-        if (!c.gateOpen) this.box(d.gate, new Color(195, 89, 91));
-        else { g.strokeColor = new Color(77, 196, 146); g.lineWidth = 3; g.rect(d.gate.x, d.gate.y, d.gate.width, d.gate.height); g.stroke(); }
-        g.fillColor = c.gateLatched ? new Color(77, 196, 146) : new Color(202, 167, 70);
-        g.circle(d.terminal.x, d.terminal.y, 25); g.fill();
-        g.strokeColor = new Color(210, 220, 230); g.lineWidth = 1; g.circle(d.terminal.x, d.terminal.y, d.interactRadius); g.stroke();
-        this.gateLabel.string = this.locale.t(c.gateLatched ? 'coop.latched' : c.gateOpen ? 'coop.open' : 'coop.closed');
-    }
-    private box(b: Box, color: Color): void { this.graphics.fillColor = color; this.graphics.rect(b.x, b.y, b.width, b.height); this.graphics.fill(); }
-    private label(parent: Node, id: string, x: number, y: number): Label {
-        const node = new Node(id); node.parent = parent; node.layer = Layers.Enum.UI_2D; node.setPosition(x, y);
-        node.addComponent(UITransform).setContentSize(210, 42);
-        const label = node.addComponent(Label); label.string = this.locale.t(id); label.fontSize = 19; label.lineHeight = 23;
-        label.color = new Color(240, 240, 240); label.overflow = Label.Overflow.SHRINK;
-        return label;
+        const green = new Color(70, 200, 136), gold = new Color(220, 170, 60);
+        this.plate.tint(c.platePlayer ? green : gold);
+        this.terminal.tint(c.gateLatched ? green : gold);
+        this.exit.tint(c.completed ? green : new Color(45, 105, 165));
+        this.gate.node.active = !c.gateOpen;
     }
 }

@@ -1,4 +1,4 @@
-/** Engine-independent input contract. Positions and movement use +Y = up. */
+/** Engine-independent input plane: +Y means forward/up-screen, mapped to world -Z by the player adapter. */
 export interface MoveVector { readonly x: number; readonly y: number }
 export type PlayerId = 1 | 2;
 export type DeviceKind = 'keyboard' | 'gamepad';

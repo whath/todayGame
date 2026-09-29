@@ -1,8 +1,10 @@
-import { Color, Graphics, Layers, Node, UITransform } from 'cc';
+import { Color, Node } from 'cc';
 import { Box, CollisionWorld } from '../core/CollisionWorld';
 import { MoveVector } from '../core/InputTypes';
 import { LevelDefinition } from '../content/ContentRegistry';
 import { PROTOTYPE_LEVEL } from '../content/PrototypeContent';
+import { toWorld, WORLD_SCALE as S } from '../core/WorldCoordinates';
+import { greybox } from './GreyboxGeometry';
 
 export class PrototypeRoom {
     public readonly bounds: Box;
@@ -13,37 +15,24 @@ export class PrototypeRoom {
         this.bounds = definition.bounds; this.spawns = definition.spawns; this.obstacles = definition.obstacles;
         this.collision = new CollisionWorld(this.bounds, this.obstacles);
     }
-
     public build(parent: Node): void {
-        const node = new Node('Floor, boundary and obstacles');
-        node.layer = Layers.Enum.UI_2D;
-        node.parent = parent;
-        node.addComponent(UITransform).setContentSize(this.bounds.width, this.bounds.height);
-        const graphics = node.addComponent(Graphics);
         const b = this.bounds;
-        graphics.fillColor = new Color(29, 39, 55);
-        graphics.rect(b.x, b.y, b.width, b.height);
-        graphics.fill();
-        graphics.lineWidth = 1;
-        graphics.strokeColor = new Color(40, 52, 70);
-        for (let x = b.x; x <= b.x + b.width; x += 50) {
-            graphics.moveTo(x, b.y); graphics.lineTo(x, b.y + b.height);
-        }
-        for (let y = b.y; y <= b.y + b.height; y += 50) {
-            graphics.moveTo(b.x, y); graphics.lineTo(b.x + b.width, y);
-        }
-        graphics.stroke();
-        graphics.lineWidth = 10;
-        graphics.strokeColor = new Color(109, 128, 154);
-        graphics.rect(b.x - 5, b.y - 5, b.width + 10, b.height + 10);
-        graphics.stroke();
-        graphics.fillColor = new Color(87, 106, 132);
-        this.obstacles.forEach(box => { graphics.rect(box.x, box.y, box.width, box.height); graphics.fill(); });
-        this.spawns.forEach((spawn, index) => {
-            graphics.strokeColor = index === 0 ? new Color(72, 199, 255, 150) : new Color(255, 181, 91, 150);
-            graphics.lineWidth = 2;
-            graphics.circle(spawn.x, spawn.y, 30);
-            graphics.stroke();
+        const center = toWorld({ x: b.x + b.width / 2, y: b.y + b.height / 2 });
+        greybox(parent, 'Floor', [center.x, -0.12, center.z], [b.width * S, 0.24, b.height * S], new Color(58, 73, 88));
+        const wall = new Color(112, 133, 152);
+        const box = (name: string, rect: Box, height: number) => {
+            const p = toWorld({ x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 });
+            greybox(parent, name, [p.x, height / 2, p.z], [rect.width * S, height, rect.height * S], wall);
+        };
+        box('North boundary', { x: b.x, y: b.y + b.height, width: b.width, height: 8 }, 0.25);
+        box('South boundary', { x: b.x, y: b.y - 8, width: b.width, height: 8 }, 0.25);
+        box('West boundary', { x: b.x - 8, y: b.y, width: 8, height: b.height }, 0.25);
+        box('East boundary', { x: b.x + b.width, y: b.y, width: 8, height: b.height }, 0.25);
+        this.obstacles.forEach((obstacle, i) => box('Obstacle ' + i, obstacle, 0.65));
+        this.spawns.forEach((spawn, i) => {
+            const p = toWorld(spawn);
+            greybox(parent, 'Spawn ' + (i + 1), [p.x, 0.015, p.z], [0.6, 0.03, 0.6],
+                i === 0 ? new Color(46, 124, 162) : new Color(155, 111, 49));
         });
     }
 }

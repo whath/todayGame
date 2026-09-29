@@ -9,6 +9,7 @@ import { PlayerPresentation } from './PlayerPresentation';
 import { LocalizationService } from '../services/LocalizationService';
 import { AccessibilityService } from '../services/AccessibilityService';
 import { Actor, ActionSemantic } from '../core/GameplayKernel';
+import { toGround, toWorld } from '../core/WorldCoordinates';
 const { ccclass } = _decorator;
 
 @ccclass('PlayerController')
@@ -19,9 +20,9 @@ export class PlayerController extends Component {
     private movement!: PlayerMovement;
     private presentation!: PlayerPresentation;
     public actor!: Actor;
-    public initialize(slot: PlayerInputSlot, locale: LocalizationService, accessibility: AccessibilityService, definition: CharacterDefinition): void {
+    public initialize(slot: PlayerInputSlot, locale: LocalizationService, accessibility: AccessibilityService, definition: CharacterDefinition, team: string | null = null): void {
         this.slot = slot; this.playerId = slot.playerId; this.node.name = `Player ${this.playerId}`;
-        this.actor = new Actor(`player.${this.playerId}`, `slot.${this.playerId}`, 'players');
+        this.actor = new Actor(`player.${this.playerId}`, `slot.${this.playerId}`, team);
         this.actor.tags.add('actor.player'); this.actor.owner = this.playerId === 1 ? 'Player1' : 'Player2';
         this.movement = this.getComponent(PlayerMovement)!;
         this.movement.speed = definition.speed; this.movement.halfSize = definition.halfSize;
@@ -50,6 +51,8 @@ export class PlayerController extends Component {
     }
     protected onDestroy(): void { this.actor?.actions.cancel('destroyed'); this.actor?.actions.changed.clear(); }
     public reset(spawn: MoveVector): void {
-        this.node.setPosition(spawn.x, spawn.y, 0); this.presentation.reset(); this.state = PlayerState.Waiting;
+        this.place(spawn); this.presentation.reset(); this.state = PlayerState.Waiting;
     }
+    public get groundPosition(): MoveVector { return toGround(this.node.position); }
+    public place(point: MoveVector): void { const p = toWorld(point); this.node.setPosition(p.x, p.y, p.z); }
 }

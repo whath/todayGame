@@ -67,3 +67,13 @@ Session schema 升到 3，避免旧程序静默忽略新机关状态；v1/v2 档
 ## 2026-09-29 — 统一 2D 渲染根
 
 首次浏览器预览证实，世界与 HUD／菜单各自注册 RenderRoot2D 会发生跨父节点排序错误，导致世界覆盖 UI。决定只在 PrototypeBootstrap 注册一个 RenderRoot2D，把动态世界固定在首个子节点，Camera 下按 HUD、RuntimeScreen、SettingsMenu 排列。绘制顺序由节点树表达，不引入额外 Camera、不更改 Player 与平台边界。修复后实际预览确认 HUD、暂停、设置及返回流程可见，自动测试 88 项通过；完整双人和 Windows Gate 尚未通过。
+
+## 2026-09-29 — v5 方向与 3D 迁移
+
+v5 覆盖早期固定合作与 2D 表现假设：3D/Windows/本地双人固定，Genre、合作/竞争、叙事未定。保持 Creator 3.8.6，不因文档写 3.8.x 随意升级。用户明确选择本轮同时迁移 3D。
+
+保留现有平面接力规则、内容 ID 和 schema 3，通过 WorldCoordinates 连接 3D XZ 世界，当前不需要重力、动态刚体或专业动画。视角仍共享；世界与 UI 各用相机，替代历史单相机方案，防止世界深度遮挡覆盖层。Builtin-standard 必须由场景材质依赖预加载，而不是只靠运行时名称。
+
+接力规则/HUD 移至 packs/relay；Actor 默认无队伍，Level 指定关系和相机策略。Inactive、Opponent、Competitive 与 Shared 补齐 v5 明确合同。竞争胜者由玩法回调决定，不把 P1 排序当公平规则。无网络、Combat、Narrative、Vehicle 或 Economy 框架。
+
+原始 Workflow 包归档，Skills 合并到项目；19 个职责 TOML 存作模板，原多 Agent 配置不激活。本次未委派。既有详细架构/历史日志保留，包中旧 v0.1/合作专属段落不覆盖当前规则。外部资产批准仍归用户，本轮只建接入记录与目录，不下载或批准素材。

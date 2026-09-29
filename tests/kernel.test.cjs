@@ -1,13 +1,13 @@
 const test=require('node:test');const assert=require('node:assert/strict');
 const core=name=>require('../temp/core-tests/'+name);
 const {PlayerPresence}=core('core/PlayerPresence');const {SpawnService}=core('core/SpawnService');
-const {resolvePairMotion}=core('core/CoopPolicies');const {CollisionWorld}=core('core/CollisionWorld');
+const {resolvePairMotion}=core('core/MultiplayerPolicies');const {CollisionWorld}=core('core/CollisionWorld');
 const {Actor,ActionRunner,TriggerRule}=core('core/GameplayKernel');const {InteractionService,OwnershipService}=core('core/InteractionService');
 const {UINavigationService}=core('runtime/UINavigationService');const {FeedbackService}=core('runtime/FeedbackService');
 const bounds={x:-500,y:-500,width:1000,height:1000},world=new CollisionWorld(bounds,[]);
 test('presence preserves actor identity and gameplay state across reconnect and explicit leave',()=>{
- const p=new PlayerPresence(1),states=[];p.changed.subscribe(e=>states.push(e.to));p.join();p.ready();p.activate();p.setGameplay('Downed');p.disconnect();p.join();p.ready();
- assert.equal(p.state,'Downed');assert.equal(p.playerId,1);p.setGameplay('Spectating');p.leave();assert.equal(p.state,'Empty');p.join();p.ready();assert.equal(p.state,'Ready');
+ const p=new PlayerPresence(1),states=[];p.changed.subscribe(e=>states.push(e.to));p.join();p.ready();p.activate();p.setGameplay('Inactive');p.disconnect();p.join();p.ready();
+ assert.equal(p.state,'Inactive');assert.equal(p.playerId,1);p.setGameplay('Spectating');p.leave();assert.equal(p.state,'Empty');p.join();p.ready();assert.equal(p.state,'Ready');
  assert.ok(states.includes('Leaving'));assert.throws(()=>p.join());
 });
 test('leaving a slot cannot rejoin on its still-held input; neutral and a fresh press can rejoin',()=>{
@@ -46,7 +46,7 @@ test('menu owner blocks partner and pointer, modal inherits ownership; disconnec
 test('actor relation and tags remain independent from combat or engine components',()=>{
  const a=new Actor('player.1','slot.1','players'),b=new Actor('player.2','slot.2','players'),n=new Actor('door','world');a.tags.add('actor.player');b.tags.add('actor.player');
  assert.equal(a.relationTo(a),'Self');assert.equal(a.relationTo(b),'Partner');assert.equal(a.relationTo(n),'Neutral');
- const ally=new Actor('ally','world','players');assert.equal(a.relationTo(ally),'Team');a.tags.add('hostile.enemies');assert.equal(a.relationTo(new Actor('e','ai','enemies')),'Hostile');
+ const ally=new Actor('ally','world','players');assert.equal(a.relationTo(ally),'Team');a.tags.add('opponent-team.enemies');assert.equal(a.relationTo(new Actor('e','ai','enemies')),'Opponent');
 });
 function action(events,overrides={}){return{canStart:()=>true,start:()=>events.push('start'),update:()=>true,complete:()=>events.push('complete'),cancel:r=>events.push(r),...overrides}}
 test('action lifecycle denies concurrent starts, completes once, and cancels without completion',()=>{
@@ -89,7 +89,7 @@ test('feedback targets only the intended controllers and sends semantic presenta
  feedback.request({kind:'pickup',target:'World'});assert.equal(rumble.length,3);assert.deepEqual(audio[0],['interaction.fail','Player2']);
 });
 test('HUD model exports semantic prompts and context without UI or localization dependencies',()=>{
- const {coopViewModel}=core('core/GameHUDViewModel'),{CoopChallenge}=core('core/CoopChallenge'),{COOP_LEVEL}=core('content/CoopLevel');
+ const {coopViewModel}=core('packs/relay/RelayHUDViewModel'),{CoopChallenge}=core('packs/relay/CoopChallenge'),{COOP_LEVEL}=core('content/CoopLevel');
  const c=new CoopChallenge(COOP_LEVEL.coop,18),actors=[{playerId:1,x:-335,y:0,interact:false},{playerId:2,x:240,y:0,interact:false}];c.update(actors,false);
  const model=coopViewModel(c,actors,true);assert.equal(model.players[0].promptId,'coop.keepPlate');assert.equal(model.players[1].promptId,'coop.useTerminal');assert.deepEqual(model.notifications,['coop.separated']);
 });

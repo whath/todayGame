@@ -21,8 +21,9 @@ const content = createPrototypeContent(), locale = new LocalizationService();
 content.validate(id => id === 'prefab.player' && fs.existsSync(path.join(root, 'assets/player/Player.prefab')), id => locale.t(id) !== id);
 function references(value) {
     if (!value || typeof value !== 'object') return;
-    if (value.__uuid__ && !metas.has(value.__uuid__)) throw Error(`Missing asset UUID: ${value.__uuid__}`);
+    // Pinned Cocos 3.8.6 builtin-standard.effect; all project references remain strict.
+    if (value.__uuid__ && value.__uuid__ !== 'c8f66d17-351a-48da-a12c-0212d28575c4' && !metas.has(value.__uuid__)) throw Error(`Missing asset UUID: ${value.__uuid__}`);
     Object.values(value).forEach(references);
 }
-for (const file of metas.values()) if (file.endsWith('.scene.meta') || file.endsWith('.prefab.meta')) references(JSON.parse(fs.readFileSync(file.slice(0,-5),'utf8')));
+for (const file of metas.values()) if (/\.(scene|prefab|mtl)\.meta$/.test(file)) references(JSON.parse(fs.readFileSync(file.slice(0,-5),'utf8')));
 console.log(`Content validation: ${content.all().length} definitions, ${metas.size} unique metadata UUIDs; references and localization present.`);

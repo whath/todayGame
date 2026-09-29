@@ -4,7 +4,7 @@ const commands = [
     [require.resolve('typescript/bin/tsc'), '-p', 'tsconfig.core.json'],
     ['tools/check-syntax.cjs'],
     ['tools/validate-content.cjs'],
-    ['--test', 'tests/foundation.test.cjs', 'tests/runtime.test.cjs', 'tests/coop.test.cjs', 'tests/kernel.test.cjs'],
+    ['--test', 'tests/foundation.test.cjs', 'tests/runtime.test.cjs', 'tests/coop.test.cjs', 'tests/kernel.test.cjs', 'tests/migration3d.test.cjs'],
 ];
 for (const args of commands) {
     const result = spawnSync(process.execPath, args, { stdio: 'inherit' });

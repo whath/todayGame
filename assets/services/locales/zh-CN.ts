@@ -1,4 +1,5 @@
 export const ZH_CN: Readonly<Record<string, string>> = {
+    'world.player': 'P{player}',
     'content.defaultPlayer': '原型角色', 'content.prototypeRoom': '双人测试房间',
     'runtime.mainMenu': 'DUOGAME · 主菜单', 'runtime.new': '开始新一局', 'runtime.continue': '继续存档',
     'runtime.join': '本地双人加入', 'runtime.joinHelp': '两位玩家按映射键或手柄面键加入，然后选择开始。\nP1：{p1}    P2：{p2}',

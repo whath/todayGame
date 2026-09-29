@@ -1,22 +1,20 @@
-# 路线图（以需求文档 v4 为准）
+# 路线图 — v5 / 3D Local Multiplayer
 
-历史源码版本与里程碑验收分开。当前源码 **0.5.0-dev**；此前实机 Gate 未完成，不能据版本号推断已经发布或验收。
+当前源码 0.5.0-dev；代码存在、自动验证、浏览器验证、硬件/Windows 验收分别记录。
 
-| 阶段 | 目标 | 当前状态 |
+| 阶段 | 当前实现 | 剩余证据 |
 | --- | --- | --- |
-| v0.1 Local Co-op Foundation | 双人独立输入、共享角色和相机、热插拔 | 代码与无头回归已有；Windows／设备待验收 |
-| v0.2 Core Services & Settings | 设置事务、音频、暂停、文案与平台能力 | 代码与无头回归已有；实际输出待验收 |
-| v0.3 Runtime & Content Foundation | 场景流程、存档、资产、内容、时间随机 | 代码与无头回归已有；引擎生命周期待验收 |
-| v0.4 Local Co-op Robustness | 玩家身份、交互竞争、空间策略、安全出生、菜单归属 | 本轮补齐最小实现并接入接力实验；实机未验收 |
-| v0.5 Universal Gameplay Kernel | Actor／State／Action／Interaction／Relation／Tags／Trigger／Feedback | 本轮补齐合同与真实调用；最后一层强制通用基础 |
-| Marketable Prototype Gate | 10–20 分钟灰盒，观察沟通、等待、失败与再玩 | NOT RUN；当前接力关仅为候选 A |
-| Game Direction Lock | 基于原型证据确定产品方向 | 未开始 |
-| Gameplay Packs | 只选择当前方向需要的专业模块 | 未开始；不自动加入战斗或剧情 |
-| Vertical Slice | 完整产品流程及已启用 Pack 验证 | 未开始 |
-| Foundation Lock | 停止扩框架，正式内容生产 | 未通过 |
+| v0.1 Local Multiplayer Foundation | 双槽位、共享 Prefab、3D 灰盒、共享视角 | 四种设备组合、Windows 游戏构建 |
+| v0.2 Core Services & Settings | 设置事务、Pause、Audio、Localization、Capability | 实际平台输出和显示恢复 |
+| v0.3 Runtime & Content | SceneFlow、保存恢复、资源、稳定 ID、Time/Random、导航 | 长时间切换、原生存储回归 |
+| v0.4 Local Multiplayer Robustness | Inactive、关系配置、CameraPolicy、竞争仲裁、Shared claim、菜单归属 | 热插拔与多人软锁实测 |
+| v0.5 Universal Gameplay Kernel | Actor/Action/Interaction/Ownership/Relationship/Tags/Trigger/Feedback | 与原型联动验收；不扩建通用框架 |
+| Marketable Prototype Gate | 接力为候选 A，可比较其他 Genre | NOT RUN；不预填 KEEP/ITERATE/KILL |
+| Game Direction Lock | 未锁定 | 依据体验/产品证据 |
+| Genre Packs | 当前只隔离已使用的 relay 实验 | 新 Pack 必须有当前场景和验收 |
+| Vertical Slice | 未开始 | 完整一局/循环、保存、结果与返回 |
+| Foundation Lock | 未通过 | Slice 通过后转内容生产 |
 
-下一步应围绕现有接力实验和新的玩法假设制作可比较的灰盒内容；用户恢复运行授权后补基础 Gate 并实际试玩，得出 KEEP / ITERATE / KILL。不好玩先改玩法，不用加通用系统替代反馈。
+当前次序：完成 3D 迁移回归 → 完整双人接力和设备/Windows Gate → 比较玩法假设。只有当前原型确实需要，才加入最小专业模块；不同时建设格斗、赛车、经营、剧情或网络框架。
 
-当前不做自研联网、完整 Ability／RPG Stats、Narrative Graph、Quest Editor、经济／合成／背包、Mod／Workshop、DLC 管理或完整 Replay。角色、关卡、主题资源与 UI 的生产配置待 Direction Lock 后按实际内容需求建设。
-
-详细映射：[v4 差量](PLAN_DELTA_V4.md) · [合作健壮性](COOP_ROBUSTNESS.md) · [玩法内核](GAMEPLAY_KERNEL.md) · [Prototype Gate](PROTOTYPE_GATE.md) · [本轮验证](VALIDATION_PLAN_V4.md)。旧验证记录保留为历史证据。
+[差量清单](PLAN_DELTA_V5.md) · [验证](VALIDATION_V5.md) · [Prototype Gate](PROTOTYPE_GATE.md) · [资产流程](ASSET_PIPELINE.md) · [工作流整合](WORKFLOW_V5.md)。
