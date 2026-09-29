@@ -151,3 +151,15 @@ Next：完整 3D 接力回归与真实设备/Windows Gate，再对比玩法候�
 - Result：官方类型/纯编译、80 脚本、108 UUID 与 113 项测试通过；四类设备测试为逻辑注入，真实设备、驾驶手感、视觉、Windows 构建 NOT RUN。
 - Footage Markers：NOT RECORDED。没有前台试玩和新增外部素材。
 - Next：先实机验证稳定悬挂、坡道、碰撞、完整圈赛/复位及跨类别往返，再调驾驶手感与增加第二赛道；详见 VALIDATION_RACING_R0。
+
+## 任务进度归档与 Git 同步
+- Goal：将当前代码状态、任务进度和下一轮准备事项集中归档。
+- Design Discussion：用户要求把任务进度以及代码提交到 Git。
+- Decision：代码基线保持 8ae44f4，新增 PROGRESS 汇总，区分代码完成与实际验收。
+- Codex Task：检查工作区，记录已完成/待验证/下一步，并提交推送。
+- Implementation：新增 docs/PROGRESS.md，README 增加入口。
+- Problems：此前状态分散在开发日志、赛车说明和验收表。
+- Root Cause：缺少单独的当前进度汇总页。
+- Result：进度文档已整理；本次未改生产代码，未重复运行测试，沿用上一轮 113 项通过记录。
+- Footage Markers：NOT RECORDED。
+- Next：赛车实际启动与双人驾驶验证，按 VALIDATION_RACING_R0 执行。

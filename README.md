@@ -8,7 +8,7 @@ Windows PC 3D 本地双人基础工程，Cocos Creator **3.8.6 + TypeScript**。
 
 后台类型检查、113 项测试、80 脚本语法与 108 UUID 检查通过。**本轮没有打开前台试玩；悬挂/碰撞/分屏效果、真实手柄与 Windows 构建均 NOT RUN。** 不把公式测试视为驾驶手感验收。
 
-[类别分层](docs/GAME_CATEGORIES.md) · [赛车实现与操作](docs/RACING_PROTOTYPE.md) · [本轮验证](docs/VALIDATION_RACING_R0.md)
+[任务进度](docs/PROGRESS.md) · [类别分层](docs/GAME_CATEGORIES.md) · [赛车实现与操作](docs/RACING_PROTOTYPE.md) · [本轮验证](docs/VALIDATION_RACING_R0.md)
 
 赛车操作：加入后 P1 E / P2 L 切车，G / K 准备，Enter 确认开始；WASD / 方向键驾驶，E / L 复位。手柄 West 切车/复位，East 准备，South 菜单确认，RT/LT 油门/刹车。赛道目前只有一条；赛车没有中途存档。
 
