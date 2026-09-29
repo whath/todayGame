@@ -1,6 +1,7 @@
 /library/
 /temp/
 /local/
+/profiles/
 /build/
 /native/engine/
 /node_modules/

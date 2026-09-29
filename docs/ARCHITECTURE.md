@@ -40,7 +40,7 @@ Lab.scene 复用入口，仅序列化不同 lab 标识和独立 UUID。Release /
 
 保留静态 AABB 分轴扫掠、贴墙滑动、角色互相穿过。房间边界 / 障碍 / 出生点统一来自 LevelDefinition；未实现重力、旋转、推力、动态刚体。需要动态物理时优先接 Cocos Physics2D。
 
-只有一个正交 Camera，沿 -Z 观察 XY；世界、HUD、菜单用 RenderRoot2D，菜单挂 Camera 子节点。SharedCamera 读取两人位置并平滑取景，视野限 260–900。首次实机验收面向 16:9，极端画幅和真实 UI 焦点仍待测试。
+只有一个正交 Camera，沿 -Z 观察 XY；Bootstrap 统一持有一个 RenderRoot2D，世界节点置于首个子节点，HUD 和菜单按层级顺序挂在 Camera 下，确保世界 → HUD → 运行菜单 → 设置的绘制顺序；各 UI 不单独注册渲染根。SharedCamera 读取两人位置并平滑取景，视野限 260–900。首次实机验收面向 16:9，极端画幅和真实 UI 焦点仍待测试。
 
 进度存档、实验存档与设置使用独立命名空间。没有通用服务定位器、全局事件总线、对象池、网络、Ability / Mod / Replay 系统。
 

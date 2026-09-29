@@ -79,6 +79,8 @@ export class PrototypeBootstrap extends Component {
     private get saves() { return this.lab ? this.services.labSaves : this.services.saves; }
 
     protected start(): void {
+        // One render root makes world -> HUD -> menus follow the node hierarchy.
+        this.node.addComponent(RenderRoot2D);
         const cameraNode = new Node('Shared Camera'); cameraNode.parent = this.node; cameraNode.setPosition(0, 0, 1000);
         this.camera = cameraNode.addComponent(Camera);
         this.camera.projection = Camera.ProjectionType.ORTHO; this.camera.orthoHeight = 360; this.camera.near = 1; this.camera.far = 2000;
@@ -130,9 +132,9 @@ export class PrototypeBootstrap extends Component {
         const character = this.services.content.character(level.characterId);
         progress(0.1); const prefab = await scope.acquire(character.prefabId); progress(0.7);
         const root = new Node('Game World'); root.active = false; root.parent = this.node; root.layer = Layers.Enum.UI_2D;
+        root.setSiblingIndex(0);
         const players: PlayerController[] = [];
         try {
-            root.addComponent(RenderRoot2D);
             const room = new PrototypeRoom(level); room.build(root);
             for (const slot of this.inputManager.slots) {
                 const node = instantiate(prefab); node.parent = root;

@@ -87,3 +87,42 @@ Root Cause：输入丢失来源、缺少相对运动扫掠。
 Result：独立输入／owner／断线回退与扫掠策略接入；88 项测试、官方类型检查、68 脚本语法及 3 内容／91 UUID 校验通过。游戏／Windows／真实硬件均 NOT RUN。
 Footage Markers：NOT RECORDED。
 Next：用户恢复运行授权后补实机 Gate，扩展可比较的灰盒玩法并记录 Prototype Gate，不继续无证据扩框架。
+
+## 2026-09-29 — 本机开发环境准备
+
+Goal：按用户指定的 `D:\workSpace\gFile` 安装必要开发工具。
+Design Discussion：固定 Creator 3.8.6；主工具放在指定目录，系统组件遵循官方安装器；保持暂不运行游戏的约束。
+Decision：部署官方 Creator ZIP、VS 2022 Community 的桌面 C++ / 游戏 C++ 工作负载，以及独立 Node.js / pnpm；沿用已有 Git 和 Creator 自带 CMake。
+Codex Task：安装并核对工具版本、签名 / 发布校验值、组件登记和实际路径，不运行项目。
+Implementation：Creator 3.8.6、VS 2022 17.14.41、MSVC、Windows SDK 26100、Node.js 24.21.0 LTS、pnpm 11.19.0；添加用户 PATH、开发终端入口和编辑器快捷方式。安装详情保存在本机 `D:\workSpace\gFile\INSTALLATION.md`。
+Problems：Dashboard 官方下载返回 403；Visual Studio 安装器返回 3010；部分系统组件位于 C 盘。
+Root Cause：Dashboard 下载端拒绝请求，具体原因未确认；3010 表示安装成功但需要重启，系统组件路径由微软安装器管理。
+Result：Creator 文件版本和签名有效；VS 的 isComplete / isLaunchable 均为 true，两个 C++ 工作负载、MSVC 和 SDK 已登记；Node / pnpm / CMake 版本可读取。Dashboard 未安装，未自动重启；VS 主安装器退出后，Windows Graphics Tools 的 DISM 后台配置仍在进行，该可选组件完成状态待确认。项目测试、导入、运行、构建和实机 Gate：NOT RUN。
+Footage Markers：NOT RECORDED。
+Next：用户方便时重启 Windows；Dashboard 下载恢复后补装并导入已有编辑器，待用户恢复运行授权后执行首次导入与双人试玩。
+
+## 2026-09-29 — 重启后首次启动条件检查
+
+Goal：确认开发环境和项目是否具备首次导入条件。
+Design Discussion：分别记录工具可用性、源码检查和仍未执行的游戏实机验证。
+Decision：运行项目已有校验，以及仓库外独立的 Windows C++ 编译／链接／运行检查。
+Codex Task：检查重启、工具链登记、Creator 关键文件与签名、项目依赖和资源引用。
+Implementation：补充 ENVIRONMENT_CHECK；在本机 gFile/checks 保存原生检查源码及日志，未修改游戏逻辑。
+Problems：Dashboard 仍未安装；编辑器登录、资源导入和渲染尚未实测。
+Root Cause：此前管理器官方下载返回 403；本轮范围为启动前检查。
+Result：系统重启已确认，无待重启标记；VS 安装完整，MSVC / SDK 小程序编译链接及运行成功；pnpm test 88 项、类型／语法／内容检查全部通过。具备首次导入条件；游戏导入／预览／Windows 构建 NOT RUN。
+Footage Markers：NOT RECORDED。
+Next：首次打开 Creator 项目并处理导入问题，再执行双人 Prototype 实机 Gate。
+
+## 2026-09-29 — 首次导入与 UI 绘制顺序修复
+
+Goal：登录后继续首次导入及预览，处理启动阻断。
+Design Discussion：先检查已有接力原型基本流程，不扩展玩法框架。
+Decision：保留单 Camera，统一 Bootstrap RenderRoot2D，通过节点层级管理世界和 UI 顺序。
+Codex Task：导入 Prototype，验证双键盘加入及暂停／设置，修复现场发现的问题。
+Implementation：移除世界和三个 UI 的独立渲染根，将世界置于首个子节点；忽略 profiles，保留编辑器正常生成的项目设置与原资源 UUID。
+Problems：进入关卡后 HUD 和暂停被世界覆盖；编辑器服务插件另报一次 msg not exist!。
+Root Cause：独立渲染根仅比较各自 siblingIndex，无法表达跨父节点前后关系；服务插件错误未确定根因。
+Result：修复后主菜单、双键盘加入、关卡、HUD、暂停、设置和恢复均实际预览通过；88 项自动测试及类型／语法／内容检查通过。完整通关、真实手柄、Windows 游戏构建仍 NOT RUN；服务插件错误不阻断本次预览。
+Footage Markers：NOT RECORDED，仅保留首次预览截图。
+Next：完整双人接力试玩与存档／设备回归，之后做 Windows 开发构建；据试玩证据再推进 Prototype Gate。

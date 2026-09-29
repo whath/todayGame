@@ -1,4 +1,4 @@
-import { Camera, Color, Graphics, Label, Layers, Node, RenderRoot2D, UITransform, view } from 'cc';
+import { Camera, Color, Graphics, Label, Layers, Node, UITransform, view } from 'cc';
 import { MenuInput } from '../core/MenuInput';
 export interface RuntimeChoice { readonly text: string; readonly run: () => void }
 export interface RuntimeScreenModel {
@@ -16,7 +16,6 @@ export class RuntimeScreen {
     private pulse = 0;
     public constructor(private readonly camera: Camera, private readonly allowPointer = () => true) {
         this.root.parent = camera.node; this.root.layer = Layers.Enum.UI_2D; this.root.setPosition(0, 0, -400);
-        this.root.addComponent(RenderRoot2D);
         this.content.parent = this.root; this.content.layer = Layers.Enum.UI_2D;
         this.buildLabel = this.label(this.root, '', -520, -334, 1040, 22, 13);
     }

@@ -1,4 +1,4 @@
-import { Camera, Color, Graphics, Label, Layers, Node, RenderRoot2D, UITransform, view } from 'cc';
+import { Camera, Color, Graphics, Label, Layers, Node, UITransform, view } from 'cc';
 import { GameServices } from '../app/GameServices';
 import { GameSession } from '../core/GameSession';
 import { InputManager } from '../input/InputManager';
@@ -18,7 +18,6 @@ export class PrototypeHUD {
         this.root.layer = Layers.Enum.UI_2D;
         this.root.parent = camera.node;
         this.root.setPosition(0, 0, -500);
-        this.root.addComponent(RenderRoot2D);
         this.panel = this.root.addComponent(Graphics);
         this.header = this.label('Title', 24);
         this.status = this.label('Session and devices', 16);

@@ -63,3 +63,7 @@ Session schema 升到 3，避免旧程序静默忽略新机关状态；v1/v2 档
 新版为路线重写，不删除已有 v0.1–v0.3 能力。补齐 Co-op Robustness 与最小 Gameplay Kernel，并在真实接力流程使用，保留关卡数据选择空间策略。主菜单 Any，模态与暂停按打开来源锁定；键鼠无法辨识人，作为共享来源，断线释放防止软锁。队友关系／动作／Trigger 不加入 Health、Damage 或 Quest。
 
 源码升为 0.5.0-dev，不代表实机里程碑通过。之后先做 10–20 分钟原型并采集 KEEP / ITERATE / KILL 证据；方向锁定后才按需建设 Pack，Slice 通过后才 Foundation Lock。文档列出的 Agents / Skills 是推荐职责，不自动创建或启动；无新增生产依赖，无游戏运行或发布。
+
+## 2026-09-29 — 统一 2D 渲染根
+
+首次浏览器预览证实，世界与 HUD／菜单各自注册 RenderRoot2D 会发生跨父节点排序错误，导致世界覆盖 UI。决定只在 PrototypeBootstrap 注册一个 RenderRoot2D，把动态世界固定在首个子节点，Camera 下按 HUD、RuntimeScreen、SettingsMenu 排列。绘制顺序由节点树表达，不引入额外 Camera、不更改 Player 与平台边界。修复后实际预览确认 HUD、暂停、设置及返回流程可见，自动测试 88 项通过；完整双人和 Windows Gate 尚未通过。

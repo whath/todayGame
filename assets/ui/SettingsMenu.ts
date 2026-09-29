@@ -1,4 +1,4 @@
-import { Camera, Color, Graphics, Label, Layers, Node, RenderRoot2D, UITransform, view } from 'cc';
+import { Camera, Color, Graphics, Label, Layers, Node, UITransform, view } from 'cc';
 import { MenuInput } from '../core/MenuInput';
 import { LocalizationService } from '../services/LocalizationService';
 import { SettingCategory, SettingDefinition, SettingValue } from '../settings/SettingDefinition';
@@ -25,7 +25,6 @@ export class SettingsMenu {
         this.root.parent = camera.node;
         this.root.layer = Layers.Enum.UI_2D;
         this.root.setPosition(0, 0, -300);
-        this.root.addComponent(RenderRoot2D);
         this.content.layer = Layers.Enum.UI_2D;
         this.content.parent = this.root;
         this.root.active = false;
